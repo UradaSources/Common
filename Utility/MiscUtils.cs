@@ -2,6 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 public static class MiscUtils
 {
 	public static bool BitMaskAnd(int mask, int v)
@@ -40,6 +44,30 @@ public static class MiscUtils
 	public static bool RandomBool()
 	{
 		return Random.value > 0.5f;
+	}
+
+	public static int AppendList<T>(ref List<T> dst, IEnumerable<T> src, bool allowRepeat = false)
+	{
+		int count = dst.Count;
+		foreach (var v in src)
+		{
+			if (allowRepeat || dst.IndexOf(v) < 0)
+				dst.Add(v);
+		}
+		return dst.Count - count;
+	}
+	public static int ConvarAndAppendList<T1, T2>(ref List<T1> dst, IEnumerable<T2> src, bool allowRepeat = false)
+	{
+		int count = dst.Count;
+		foreach (var v in src)
+		{
+			if (v is T1 tv)
+			{
+				if (allowRepeat || dst.IndexOf(tv) < 0)
+					dst.Add(tv);
+			}
+		}
+		return dst.Count - count;
 	}
 
 	public static string Connect(string space, params string[] args)
@@ -107,25 +135,88 @@ public static class MiscUtils
 	}
 
 #if UNITY_EDITOR
-	public static int GetSelected<T>(ref List<T> results)
-		where T : UnityEngine.Object
+	// 获取当前选中的GO
+	// 将保留选择顺序
+	public static int GetSelectedGameObjectsByOrder(ref List<GameObject> result, bool inScene = true)
 	{
-		int count = results.Count;
-		foreach (var obj in UnityEditor.Selection.objects)
-		{
-			if (obj is T go)
-				results.Add(go);
-		}
-		return results.Count - count;
-	}
-	public static T GetSelected<T>()
-		where T : UnityEngine.Object
-	{
-		List<T> results = new List<T>();
-		int count = GetSelected(ref results);
+		int count = result.Count;
 
-		if (count == 0) return null;
-		else return results[results.Count - 1];
+		var selected = Selection.objects;
+		foreach (var obj in selected)
+		{
+			if (obj is GameObject go)
+			{ 
+				// 检查是否是场景中的对象
+				if (inScene && string.IsNullOrEmpty(go.scene.name))
+					continue;
+				
+				result.Add(go);
+			}
+		}
+		return result.Count - count;
+	}
+	public static int GetSelectedComponentsByOrder<T>(ref List<T> result)
+		where T : Component
+	{
+		int count = result.Count;
+
+		var selected = Selection.objects;
+		foreach (var obj in selected)
+		{
+			if (obj is GameObject go && go.TryGetComponent(out T com))
+				result.Add(com);
+		}
+
+		return result.Count - count;
+	}
+
+	public static int GetSelectedByOrder<T>(ref List<T> result, System.Func<T, bool> checker = null)
+		where T : UnityEngine.Object
+	{
+		int count = result.Count;
+
+		var selected = Selection.objects;
+		foreach (var obj in selected)
+		{
+			// 只处理场景中的对象
+			if (obj is T to && checker(to))
+				result.Add(to);
+		}
+
+		return result.Count - count;
+	}
+
+	public static GameObject GetSelectedGameObjectInScene()
+	{
+		var selected = Selection.objects;
+		foreach (var obj in selected)
+		{
+			// 只处理场景中的对象
+			if (obj is GameObject go && !string.IsNullOrEmpty(go.scene.name))
+				return go;
+		}
+		return null;
 	}
 #endif
 }
+
+//public static int GetSelected<T>(ref List<T> results)
+//	where T : UnityEngine.Object
+//{
+//	int count = results.Count;
+//	foreach (var obj in UnityEditor.Selection.objects)
+//	{
+//		if (obj is T go)
+//			results.Add(go);
+//	}
+//	return results.Count - count;
+//}
+//public static T GetSelected<T>()
+//	where T : UnityEngine.Object
+//{
+//	List<T> results = new List<T>();
+//	int count = GetSelected(ref results);
+
+//	if (count == 0) return null;
+//	else return results[results.Count - 1];
+//}

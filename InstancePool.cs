@@ -15,7 +15,7 @@ public class InstancePool<T> where T : Component
 	private string m_sendMessage;
 
 	[SerializeField, HideInInspector]
-	private List<T> m_instances = new();
+	private List<T> m_instances = new List<T>();
 
 	public int Count { get => m_instances.Count; }
 

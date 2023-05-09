@@ -8,7 +8,7 @@ public class CircleAround : MonoBehaviour
 	[System.Serializable]
 	public class SurroundedEvent : UnityEvent<CircleAround> { };
 
-	public SurroundedEvent OnSurrounded = new();
+	public SurroundedEvent OnSurrounded = new SurroundedEvent();
 
 	[SerializeField]
 	private float m_recordMaxFrameLength;
@@ -22,7 +22,7 @@ public class CircleAround : MonoBehaviour
 	[SerializeField]
 	private float m_minSurroundRadius = 0;
 
-	private Queue<float> m_recordAngleDelta = new();
+	private Queue<float> m_recordAngleDelta = new Queue<float>();
 
 	private Vector2? m_previousPos = null;
 

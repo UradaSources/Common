@@ -19,7 +19,7 @@ public class RangeGravity : MonoBehaviour
 	[SerializeField]
 	private float m_radius;
 
-	private List<Collider2D> m_triggerBuffer = new();
+	private List<Collider2D> m_triggerBuffer = new List<Collider2D>();
 
 	public Vector2 GravityCenter
 	{
