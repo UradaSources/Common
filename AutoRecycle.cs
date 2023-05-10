@@ -28,8 +28,6 @@ public class AutoRecycle : MonoBehaviour
 
 	private float m_timer = 0;
 
-	private bool m_recycled = false;
-
 	public void SetRectRange(Vector2 max, Vector2 min, bool? useRange = null)
 	{
 		m_rangeMax = max;
@@ -50,20 +48,15 @@ public class AutoRecycle : MonoBehaviour
 
 		if (m_forceDisable)
 			this.gameObject.SetActive(false);
-
-		m_recycled = true;
 	}
 
 	private void OnEnable()
 	{
 		m_timer = 0;
-		m_recycled = false;
 	}
 
 	private void Update()
 	{
-		if (m_recycled) return;
-
 		if (this.m_useRectRange)
 		{
 			var pos = (Vector2)this.transform.position;

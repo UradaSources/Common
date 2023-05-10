@@ -134,6 +134,9 @@ public static class MiscUtils
 		return new Rect(position: pos, size: new Vector2(x, y));
 	}
 
+	public static Vector2 MousePosition()
+		=> Camera.main.ScreenToWorldPoint(Input.mousePosition);
+
 #if UNITY_EDITOR
 	// 获取当前选中的GO
 	// 将保留选择顺序
