@@ -9,60 +9,27 @@ public static class DebugUtility
 	{
 		Debug.DrawLine(a, b, color ?? Color.white, duration, depthTest);
 	}
-
-	public static void DrawLines(bool isClosed, float duration, Color c, params Vector3[] points)
+	public static void DrawRay(Vector2 pos, Vector2 vec, Color? color = null, float duration = 0, bool depthTest = false)
 	{
-		if (points.Length <= 1) return;
-
-		var first = points[0];
-		var previous = new Vector3();
-
-		for (int i = 0; i < points.Length; i++)
-		{
-			var cur = points[i];
-
-			if (i == 0)
-				first = points[i];
-			else
-				DebugUtility.DrawLine(previous, cur, c, duration);
-
-			previous = cur;
-		}
-
-		if (isClosed) DebugUtility.DrawLine(previous, first, c, duration);
+		Debug.DrawRay(pos, vec, color ?? Color.white, duration, depthTest);
 	}
+	
 	public static void DrawLines(bool isClosed, float duration, Color c, IEnumerable<Vector3> points)
 	{
 		bool recordFirst = false;
-		Vector2 first = default;
-		Vector2 previous = default;
+		Vector3 first = default;
+
+		Vector3 previous = default;
 
 		foreach (var cur in points)
 		{
-			if (recordFirst)
+			DebugUtility.DrawMark(cur, 0.01f, Color.red);
+
+			if (!recordFirst)
+			{ 
 				first = cur;
-			else
-				DebugUtility.DrawLine(previous, cur, c, duration);
-
-			previous = cur;
-		}
-
-		if (isClosed) DebugUtility.DrawLine(previous, first, c, duration);
-	}
-
-	public static void DrawLines(bool isClosed, float duration, Color c, params Vector2[] points)
-	{
-		if (points.Length <= 1) return;
-
-		var first = points[0];
-		var previous = new Vector2();
-
-		for (int i = 0; i < points.Length; i++)
-		{
-			var cur = points[i];
-
-			if (i == 0)
-				first = points[i];
+				recordFirst = true;
+			}
 			else
 				DebugUtility.DrawLine(previous, cur, c, duration);
 
@@ -75,11 +42,14 @@ public static class DebugUtility
 	{
 		bool recordFirst = false;
 		Vector2 first = default;
+
 		Vector2 previous = default;
 
 		foreach (var cur in points)
 		{
-			if (recordFirst)
+			DebugUtility.DrawMark(cur, 0.01f, Color.red);
+
+			if (!recordFirst)
 			{
 				first = cur;
 				recordFirst = true;
@@ -91,11 +61,6 @@ public static class DebugUtility
 		}
 
 		if (isClosed) DebugUtility.DrawLine(previous, first, c, duration);
-	}
-
-	public static void DrawRay(Vector2 pos, Vector2 vec, Color? color = null, float duration = 0, bool depthTest = false)
-	{
-		Debug.DrawRay(pos, vec, color ?? Color.white, duration, depthTest);
 	}
 
 	public static void DrawArrowBetween(Vector2 start, Vector2 target, float arrowHeadLength = 0.2f, float arrowHeadAngle = 15.0f, Color? color = null, float duration = 0)
@@ -186,22 +151,27 @@ public static class DebugUtility
 		}
 	}
 
-	public static void DrawMark(Vector2 pos, float length, Color? color = null, float duration = 0)
+	public static void DrawMark(Vector3 pos, float size, Color? color = null, float duration = 0)
 	{
 		color = color ?? Color.white;
 
-		float half = length * 0.5f;
+		float half = size * 0.5f;
 
-		DebugUtility.DrawLine(pos + Vector2.left * half, pos + Vector2.right * half, color, duration);
-		DebugUtility.DrawLine(pos + Vector2.down * half, pos + Vector2.up * half, color, duration);
+		DebugUtility.DrawLine(pos + Vector3.left * half, pos + Vector3.right * half, color, duration);
+		DebugUtility.DrawLine(pos + Vector3.down * half, pos + Vector3.up * half, color, duration);
+		DebugUtility.DrawLine(pos + Vector3.back * half, pos + Vector3.forward * half, color, duration);
 
 		// 一个小斜线
 		float diagonalFactor = 0.2f;
 
-		var p1 = pos + new Vector2(-1, 1) * half * diagonalFactor;
-		var p2 = pos + new Vector2(1, -1) * half * diagonalFactor;
-
+		var p1 = pos + new Vector3(-1, 1, 1) * half * diagonalFactor;
+		var p2 = pos + new Vector3(1, -1, 1) * half * diagonalFactor;
 		DebugUtility.DrawLine(p1, p2, color, duration);
+
+		var p3 = pos + new Vector3(1, 1, -1) * half * diagonalFactor;
+		var p4 = pos + new Vector3(-1, 1, 1) * half * diagonalFactor;
+		DebugUtility.DrawLine(p3, p4, color, duration);
+
 	}
 
 	public static void DrawBoxCast(Vector2 pos, Vector2 size, float angle, Vector2 dir, float dist)

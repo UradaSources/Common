@@ -63,7 +63,7 @@ public static class MiscUtils
 		{
 			if (v is T1 tv)
 			{
-				if (allowRepeat || dst.IndexOf(tv) < 0)
+				if (allowRepeat == false || dst.IndexOf(tv) < 0)
 					dst.Add(tv);
 			}
 		}
