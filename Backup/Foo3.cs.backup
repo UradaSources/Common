@@ -1,0 +1,190 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.Events;
+using DG.Tweening;
+
+[System.Serializable]
+public class ITweenNode
+{
+	public bool inserted;
+
+	// tween节点
+	public virtual Tween ToTweenNode() => null;
+
+	// 回调节点
+	// public virtual TweenCallback ToCallbackNode() => null;
+}
+
+[System.Serializable]
+public class TweenAnimNode : ITweenNode
+{
+	// 储存动画数据
+	// 所有的值都被转换为本地坐标进行储存
+
+	public enum Mode
+	{
+		Translate,
+		Rotate,
+		Scale
+	}
+
+	public Transform tr;
+
+	public Mode mode;
+
+	public Vector3 target;
+
+	public bool useStart = false;
+	public Vector3 start;
+
+	public float duration = 0;
+	public Ease ease = Ease.Linear;
+
+	public override Tween ToTweenNode()
+	{
+		Debug.Assert(tr, "tr cannot be nil");
+		switch(this.mode)
+		{
+			case Mode.Translate:
+				{
+					var tw = tr.DOLocalMove(this.target, this.duration).SetEase(this.ease);
+					if (this.useStart)
+						tw.startValue = this.start;
+					return tw;
+				}
+			case Mode.Rotate:
+				{
+					var tw = tr.DOLocalRotate(this.target, this.duration, RotateMode.FastBeyond360).SetEase(this.ease);
+					if (this.useStart)
+						tw.startValue = this.start;
+					return tw;
+				}
+			default:
+				{
+					var tw = tr.DOScale(this.target, this.duration).SetEase(this.ease);
+					if (this.useStart)
+						tw.startValue = this.start;
+					return tw;
+				}
+		};
+	}
+}
+
+//[System.Serializable]
+//public class TweenCallbackNode : ITweenNode
+//{
+//	public UnityEvent callbacks;
+
+//	public override TweenCallback ToCallbackNode()
+//	{
+//		return () => this.callbacks?.Invoke();
+//	}
+//}
+
+[System.Serializable]
+public class TweenSequenceNode : ITweenNode
+{
+	[SerializeField]
+	private List<TweenAnimNode> m_nodes;
+
+	public List<TweenAnimNode> Nodes 
+	{ 
+		get => m_nodes;
+		set
+		{
+			m_nodes = value;
+			this.GenSequence();
+		}
+	}
+
+	public Sequence GenSequence()
+	{
+		var sequence = DOTween.Sequence();
+		
+		foreach (var node in m_nodes)
+		{
+			var tw = node.ToTweenNode();
+			if (tw != null)
+			{
+				if (!node.inserted)
+					sequence.Append(tw);
+				else
+					sequence.Join(tw);
+			}
+			// else
+			//	m_sequence.AppendCallback(node.ToCallbackNode());
+		}
+		return sequence;
+	}
+
+	public override Tween ToTweenNode() => this.GenSequence();
+
+#if UNITY_EDITOR
+	//[EditorCools.Button("Set as EndPos")]
+	//public void SetCurPosAsEndPos()
+	//{
+	//	if (m_nodeList.Count == 0) return;
+
+	//	var node = m_nodeList[m_nodeList.Count - 1];
+
+	//	if (!node.tr) return;
+	//	node.endPos = node.local ? node.tr.localPosition : node.tr.position;
+	//}
+
+	//[EditorCools.Button("Set as StartPos", space: 1)]
+	//public void SetCurPosAsStartPos()
+	//{
+	//	if (m_nodeList.Count == 0) return;
+
+	//	var node = m_nodeList[m_nodeList.Count - 1];
+
+	//	if (!node.tr) return;
+	//	node.useStartPos = true;
+	//	node.startPos = node.local ? node.tr.localPosition : node.tr.position;
+	//}
+
+	//[EditorCools.Button("Restore as StartPos")]
+	//public void RestoreStartPos()
+	//{
+	//	if (m_nodeList.Count == 0) return;
+
+	//	var node = m_nodeList[m_nodeList.Count - 1];
+
+	//	if (node.tr && node.useStartPos)
+	//	{
+	//		if (node.local)
+	//			node.tr.localPosition = node.startPos;
+	//		else
+	//			node.tr.position = node.startPos;
+	//	}
+	//}
+#endif
+}
+
+public class Foo3:MonoBehaviour
+{
+	[SerializeField] 
+	private TweenSequenceNode anim;
+
+	[ContextMenu("play")]
+	private void Play()
+	{
+		anim.GenSequence().Play();
+	}
+
+	bool start = false;
+	float timer = 0;
+
+	private void Update()
+	{
+		if (Input.GetKeyDown(KeyCode.Space))
+		{
+			this.Play();
+			start = true;
+		}
+
+		if (start) timer += Time.deltaTime;
+		Debug.Log(timer);
+	}
+}

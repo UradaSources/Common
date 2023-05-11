@@ -1,0 +1,278 @@
+﻿//using System.Collections;
+//using System.Collections.Generic;
+//using UnityEngine;
+//using UnityEditor;
+
+//public class EditorDrawContext
+//{
+//	private Vector2 m_origPos;
+//	private Vector2 m_lastPos;
+
+//	public int width;
+
+//	public float fixedYSpace = 5;
+//	public float xSpacePerLevel = 20;
+
+//	public int level = 0;
+
+//	public Rect Allot(GUIContent text, GUIStyle style)
+//	{
+//		var height = style.CalcSize(text).y;
+
+//		var area = new Rect(m_lastPos, new Vector2(this.width, height));
+//		area.x += level * xSpacePerLevel;
+
+//		m_lastPos.y += this.fixedYSpace;
+
+//		return area;
+//	}
+//}
+
+
+
+//// 待修改
+//// 该fieldInfo是他妈的父对象的fieldInfo
+
+//[CustomPropertyDrawer(typeof(PointPath))]
+//public class PointPtahEditor : PropertyDrawer
+//{
+//	private TextAsset m_serializedFile;
+
+//	private bool m_autoWrite;
+
+//	private float m_totalHeight;
+
+//	// 实例与序列化文件是否相同
+//	public bool HasModified()
+//	{
+//		if (m_serializedFile)
+//		{
+//			var obj = JsonUtility.FromJson<PointPath>(m_serializedFile.text);
+
+//			var value = this.fieldInfo.GetValue("path") as PointPath;
+
+//			var points = value.points; // as Vector3[];
+//			var closed = value.closed; // this.fieldInfo.GetValue("closed") as bool?;
+
+//			bool equel = (points.Length == obj.points.Length);
+
+//			int i = 0;
+//			foreach (var p in points)
+//			{
+//				if (p != obj.points[i++])
+//				{
+//					equel = false;
+//					break;
+//				}
+//			}
+
+//			if (closed != obj.closed) equel = false;
+
+//			return !equel;
+//		}
+//		return false;
+//	}
+
+//	public PointPath GetInstanceValueCopy()
+//	{
+//		// var points = this.fieldInfo.GetValue("points") as Vector3[];
+//		// var closed = this.fieldInfo.GetValue("closed") as bool?;
+//		return this.fieldInfo.GetValue("path") as PointPath;
+//	}
+
+//	public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+//	{
+//		return m_totalHeight;
+//	}
+
+//	public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+//	{
+//		EditorGUI.BeginProperty(position, label, property);
+
+//		//// 标准行距
+//		//var stStyle = EditorStyles.label;
+//		//var stHeight = stStyle.CalcSize(GUIContent.none).y;
+
+//		var fixedYSpace = 10;
+//		var xSpacePerLevel = 20;
+
+//		// var point = position.position.y
+
+//		//var fileFieldRect = new Rect(position.position.x, point, position.width, stHeight);
+//		//point += stHeight + space;
+
+//		var lastPos = position.position;
+
+//		// 绘制标题
+//		{
+//			var style = EditorStyles.boldLabel;
+
+//			var text = new GUIContent("Point Path");
+//			var size = style.CalcSize(text);
+
+//			var pos = new Rect(lastPos, size);
+//			lastPos.y += size.y;
+
+//			EditorGUI.LabelField(pos, text, style);
+//		}
+
+//		// 垂直间隔
+//		lastPos.y += fixedYSpace;
+
+//		// 缩进
+//		lastPos.x += xSpacePerLevel * 1;
+
+//		// 绘制属性
+//		{
+//			// var style = EditorStyles.label;
+
+//			var prob = property.FindPropertyRelative("points");
+
+//			var height = EditorGUI.GetPropertyHeight(prob);
+
+//			var pos = new Rect(lastPos, new Vector2(position.width, height));
+//			lastPos.y += height;
+
+//			EditorGUI.PropertyField(pos, prob);
+//		}
+//		{
+//			var prob = property.FindPropertyRelative("closed");
+
+//			var height = EditorGUI.GetPropertyHeight(prob);
+
+//			var pos = new Rect(lastPos, new Vector2(position.width, height));
+//			lastPos.y += height;
+
+//			EditorGUI.PropertyField(pos, prob);
+//		}
+
+//		// 垂直间隔
+//		lastPos.y += fixedYSpace;
+
+//		// 绘制标题
+//		{
+//			var style = EditorStyles.boldLabel;
+
+//			var text = new GUIContent("Serialized");
+//			var size = style.CalcSize(text);
+
+//			var pos = new Rect(lastPos, size);
+//			lastPos.y += size.y;
+
+//			EditorGUI.LabelField(pos, text, style);
+//		}
+
+//		// 绘制序列化文件
+//		{
+//			var style = EditorStyles.label;
+
+//			// 若序列化文件与实例不同步, 则实现一个星号
+//			string tile = "File";
+//			if (this.HasModified()) tile += "(*)";
+
+//			var text = new GUIContent(tile);
+//			var height = style.CalcSize(text).y;
+
+//			var pos = new Rect(lastPos, new Vector2(position.width - xSpacePerLevel, height));
+//			lastPos.y += height;
+
+//			var res = EditorGUI.ObjectField(pos, text, m_serializedFile, typeof(TextAsset), false);
+//			m_serializedFile = res as TextAsset;
+//		}
+
+//		var oridEnableState = GUI.enabled;
+//		GUI.enabled = m_serializedFile != null;
+
+//		// 绘制按钮
+//		{
+//			var style = EditorStyles.miniButton;
+
+//			var c1 = new GUIContent("Write");
+//			var c2 = new GUIContent("Reload form file");
+
+//			var size1 = style.CalcSize(c1);
+//			var size2 = style.CalcSize(c2);
+
+//			var space = position.width - (size1.x + size2.x);
+//			size1.x += space * 0.5f;
+//			size2.x += space * 0.5f;
+
+//			var rect1 = new Rect(lastPos, size1);
+//			var rect2 = new Rect(lastPos + new Vector2(size1.x, 0), size2);
+
+//			if (GUI.Button(rect1, c1, style))
+//			{
+//				var data = this.GetInstanceValueCopy();
+//				var dataStr = JsonUtility.ToJson(data);
+
+//				System.IO.File.WriteAllText(AssetDatabase.GetAssetPath(m_serializedFile), dataStr);
+//				EditorUtility.SetDirty(m_serializedFile);
+
+//				Debug.Log("<color=green>write file</color>");
+//			}
+//			if (GUI.Button(rect2, c2, style))
+//			{
+//				var data = JsonUtility.FromJson<PointPath>(m_serializedFile.text);
+//				this.fieldInfo.SetValue("points", data.points);
+//				this.fieldInfo.SetValue("closed", data.closed);
+
+//				Debug.Log("<color=green>write instance</color>");
+//			}
+
+//			lastPos.y += size1.y;
+//		}
+
+//		GUI.enabled = oridEnableState;
+
+//		// 更新整个属性的绘制区域大小
+//		var totalHeight = Mathf.Abs(lastPos.y - position.y);
+//		if (totalHeight != m_totalHeight)
+//		{
+//			m_totalHeight = totalHeight;
+//			HandleUtility.Repaint();
+//		}
+
+//		//// 处理序列化资产
+//		//var res = EditorGUI.ObjectField(fileFieldRect, "Serialized file", m_serializedFile, typeof(TextAsset), false);
+//		//m_serializedFile = res as TextAsset;
+
+//		//var oridState = GUI.enabled;
+//		//GUI.enabled = m_serializedFile != null;
+
+//		//var toggleRect = new Rect(position.position.x, point, position.width, stHeight);
+//		//point += stHeight + fixedSpace;
+
+//		//m_autoWrite = EditorGUI.Toggle(toggleRect, "Auto write", m_autoWrite);
+
+//		//// start horizontal
+//		//{
+//		//	var c1 = new GUIContent("Write");
+//		//	var c2 = new GUIContent("Reload form file");
+
+//		//	var style = EditorStyles.miniButton;
+
+//		//	var w1 = style.CalcSize(c1).x;
+//		//	var w2 = style.CalcSize(c2).x;
+
+//		//	var h1 = style.CalcSize(c1).y;
+
+//		//	var _space = position.width - (w1 + w2);
+
+//		//	var butRect1 = new Rect(position.position.x, point, w1 + _space * 0.5f, h1);
+//		//	var butRect2 = new Rect(position.position.x + w1 + _space * 0.5f, point, w2 + _space * 0.5f, h1);
+
+//		//	if (GUI.Button(butRect1, c1, style))
+//		//	{
+
+//		//	}
+//		//	if (GUI.Button(butRect2, c2, style))
+//		//	{ 
+
+//		//	}
+//		//}
+
+//		//GUI.enabled = oridState;
+
+//		EditorGUI.EndProperty();
+//	}
+//}
