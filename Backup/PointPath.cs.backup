@@ -1,0 +1,24 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+// ur运行时资产允许进行json序列化/反序列化
+// 在编辑器中允许资产与特定的序列化文件进行绑定
+// 进行从序列化生成/写入序列化的操作
+public interface IUrResource<T>
+{
+	public string Serialization();
+	public void Deserialization(string data);
+}
+
+[System.Serializable]
+public class PointPath : ScriptableObject, IUrResource<PointPath>
+{
+	public string Serialization()
+		=> JsonUtility.ToJson(this);
+	public void Deserialization(string data) 
+		=> JsonUtility.FromJsonOverwrite(data, this);
+
+	public Vector3[] points;
+	public bool closed;
+}

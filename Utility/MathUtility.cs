@@ -142,6 +142,8 @@ public static class MathUtility
 	public static Vector2 SetValue(Vector2 basic, float? x = null, float? y = null)
 		=> SetValue(basic, x, y);
 
+
+
 	// 斜距式
 	public static Vector2 Point(float x, float k, float b)
 	{

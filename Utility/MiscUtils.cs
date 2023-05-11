@@ -17,6 +17,23 @@ public static class MiscUtils
 		return (v & mask) != 0;
 	}
 
+	public static int ExportPosition(ref List<Vector3> dst, IEnumerable<Transform> src)
+	{
+		int count = dst.Count;
+		foreach (var tr in src)
+			dst.Add(tr.position);
+
+		return dst.Count - count;
+	}
+	public static int ExportPosition(ref List<Vector2> dst, IEnumerable<Transform> src)
+	{
+		int count = dst.Count;
+		foreach (var tr in src)
+			dst.Add(tr.position);
+
+		return dst.Count - count;
+	}
+
 	public static bool InLayer(GameObject go, string layer)
 		=> InLayer(go, LayerMask.NameToLayer(layer));
 	public static bool InLayer(GameObject go, LayerMask layermask)
@@ -56,7 +73,7 @@ public static class MiscUtils
 		}
 		return dst.Count - count;
 	}
-	public static int ConvarAndAppendList<T1, T2>(ref List<T1> dst, IEnumerable<T2> src, bool allowRepeat = false)
+	public static int ConverAndAppendList<T1, T2>(ref List<T1> dst, IEnumerable<T2> src, bool allowRepeat = false)
 	{
 		int count = dst.Count;
 		foreach (var v in src)

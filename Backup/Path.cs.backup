@@ -1,0 +1,101 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Path : MonoBehaviour
+{
+	public Transform[] path;
+	public int sampleCount = 10;
+
+    public static Vector3[] SmoothPath(Vector3[] path, int samples)
+    {
+        if (path.Length < 2 || samples < 2) return path;
+
+        Vector3[] smoothedPath = new Vector3[samples];
+        smoothedPath[0] = path[0];
+        smoothedPath[samples - 1] = path[path.Length - 1];
+
+        float stepSize = 1f / (samples - 1);
+
+        for (int i = 1; i < samples - 1; i++)
+        {
+            float t = i * stepSize;
+            Vector3 p = Bezier2(path, t);
+            smoothedPath[i] = p;
+        }
+
+        return smoothedPath;
+    }
+
+    public static Vector3 Bezier2(Vector3[] path, float t)
+    {
+        int count = path.Length;
+
+        if (count == 2)
+        {
+            return Vector3.Lerp(path[0], path[1], t);
+        }
+        else if (count == 3)
+        {
+            return MathUtility.BezierCurve(path[0], path[1], path[2], t);
+        }
+
+        Vector3[] newPoints = new Vector3[count - 1];
+        for (int i = 0; i < count - 1; i++)
+        {
+            newPoints[i] = Vector3.Lerp(path[i], path[i + 1], t);
+        }
+
+        return Bezier2(newPoints, t);
+    }
+
+    //public static Vector3 QuadraticBezier(Vector3 p0, Vector3 p1, Vector3 p2, float t)
+    //{
+    //    float u = 1 - t;
+    //    float tt = t * t;
+    //    float uu = u * u;
+    //    return (uu * p0) + (2 * u * t * p1) + (tt * p2);
+    //}
+
+    public Vector3[] HH()
+    {
+        var pp = new Vector3[path.Length];
+
+        int i = 0;
+        foreach (var _p in path) pp[i++] = _p.position;
+
+        return SmoothPath(pp, sampleCount);
+    }
+
+    public IEnumerable<Vector3> GetPoints()
+    {
+        var pp = new Vector3[path.Length];
+
+        int i = 0;
+        foreach (var _p in path) pp[i++] = _p.position;
+
+        var points = SmoothPath(pp, sampleCount);
+        foreach (var p in points)
+        {
+            yield return p;
+        }
+    }
+
+#if UNITY_EDITOR
+    private void OnDrawGizmos()
+	{
+		if (path != null && path.Length > 1)
+		{
+            var pp = new Vector3[path.Length];
+
+            int i = 0;
+            foreach (var _p in path) pp[i++] = _p.position;
+
+            var points = SmoothPath(pp, sampleCount);
+
+            DebugUtility.DrawLines(false, 0, Color.white, pp);
+			DebugUtility.DrawLines(false, 0, Color.green, points);
+		}
+	}
+#endif
+}
