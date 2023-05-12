@@ -34,9 +34,9 @@ public static class MiscUtils
 		return dst.Count - count;
 	}
 
-	public static bool InLayer(GameObject go, string layer)
-		=> InLayer(go, LayerMask.NameToLayer(layer));
-	public static bool InLayer(GameObject go, LayerMask layermask)
+	public static bool InLayer(this GameObject go, string layer)
+		=> InLayer(go, LayerMask.GetMask(layer));
+	public static bool InLayer(this GameObject go, LayerMask layermask)
 		=> layermask == (layermask | (1 << go.layer));
 
 	public static void RequiredComponent<ComT>(Component obj, out ComT com)

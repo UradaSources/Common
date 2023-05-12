@@ -46,7 +46,7 @@ public class CircleAround : MonoBehaviour
 		// 若绕圈半径小于最小半径 清空角度值
 		if (localPos.magnitude < m_minSurroundRadius)
 			this.ClearRecordAngleDelta();
-		else 
+		else
 		{
 			if (m_previousPos.HasValue)
 			{

@@ -195,7 +195,7 @@ public static class MathUtility
 	{
 		if (v < min)
 		{
-			float dist = Mathf.Abs(v - min) % (max-min);
+			float dist = Mathf.Abs(v - min) % (max - min);
 			return max - dist;
 		}
 		else if (v > max)
@@ -243,11 +243,13 @@ public static class MathUtility
 		return Mathf.Abs(a.x - b.x) + Mathf.Abs(a.y - b.y);
 	}
 
-	// 计算v绕pivot旋转angle后的值
+	// 计算v绕pivot逆时针旋转angle后的值
 	public static Vector3 RotationPoint(Vector3 point, Vector3 pivot, Vector3 angle)
 	{
 		return Quaternion.Euler(angle) * (point - pivot) + pivot;
 	}
+	public static Vector2 RotationDirect(Vector2 dir, float angle)
+		=> RotationPoint(dir, Vector3.zero, Vector3.forward * angle);
 
 	// 向下舍入到基数的倍数
 	public static float NearestRound(float v, float unit)
