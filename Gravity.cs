@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -32,7 +32,7 @@ public class Gravity : MonoBehaviour
 		rb.AddForce(force * dir, ForceMode2D.Force);
 
 #if UNITY_EDITOR
-		if (editor_drawGizmos)
+		if (editorDrawGizmos)
 		{
 			DebugUtility.DrawMark(rb.position, 0.1f, Color.green);
 			DebugUtility.DrawArrow(rb.position, force * dir, 0.1f, color: Color.grey);
@@ -54,7 +54,7 @@ public class Gravity : MonoBehaviour
 
 #if UNITY_EDITOR
 
-	public bool editor_drawGizmos = false;
+	public bool editorDrawGizmos = false;
 
 	private void Reset()
 	{
