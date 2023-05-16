@@ -37,9 +37,9 @@ public static class MiscUtils
 		return dst.Count - count;
 	}
 
-	public static bool InLayer(GameObject go, string layer)
-		=> InLayer(go, LayerMask.NameToLayer(layer));
-	public static bool InLayer(GameObject go, LayerMask layermask)
+	public static bool InLayer(this GameObject go, string layer)
+		=> InLayer(go, LayerMask.GetMask(layer));
+	public static bool InLayer(this GameObject go, LayerMask layermask)
 		=> layermask == (layermask | (1 << go.layer));
 
 	public static void RequiredComponent<ComT>(Component obj, out ComT com)
@@ -166,6 +166,8 @@ public static class MiscUtils
 		return new Rect(position: pos, size: new Vector2(x, y));
 	}
 
+	public static Vector2 MousePosition()
+		=> Camera.main.ScreenToWorldPoint(Input.mousePosition);
 	// 在保持与目标距离的同时以forward一面朝向目标
 	public static Vector3 Alignment(Vector3 self, Vector3 target, Vector3 forward)
 	{
