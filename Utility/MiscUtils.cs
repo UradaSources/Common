@@ -168,6 +168,7 @@ public static class MiscUtils
 
 	public static Vector2 MousePosition()
 		=> Camera.main.ScreenToWorldPoint(Input.mousePosition);
+
 	// 在保持与目标距离的同时以forward一面朝向目标
 	public static Vector3 Alignment(Vector3 self, Vector3 target, Vector3 forward)
 	{
