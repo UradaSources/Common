@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections;
 using UnityEngine;
+using System.Linq;
 
 [System.Serializable]
 public struct WRect
@@ -44,7 +45,7 @@ public struct WRect
 
 	public override string ToString()
 	{
-		return $"Rect{{{centre}, {size}}}";
+		return $"WRect{{{centre}, {size}}}";
 	}
 
 	public Vector2 centre;
@@ -142,7 +143,13 @@ public static class MathUtility
 	public static Vector2 SetValue(Vector2 basic, float? x = null, float? y = null)
 		=> SetValue(basic, x, y);
 
+	public static int VaildIndex(int index, int length)
+	{
+		index %= length;
+		if (index < 0) index += length;
 
+		return index;
+	}
 
 	// 斜距式
 	public static Vector2 Point(float x, float k, float b)
@@ -189,7 +196,6 @@ public static class MathUtility
 		v.y = Mathf.Clamp(v.y, min.y, max.y);
 		return v;
 	}
-
 
 	public static float Loop(float v, float max, float min)
 	{
@@ -308,8 +314,8 @@ public static class MathUtility
 		return Mathf.Pow(1 - t, 3) * p1 + 3 * t * Mathf.Pow(1 - t, 2) * p2 + 3 * Mathf.Pow(t, 2) * (1 - t) * p3 + Mathf.Pow(t, 3) * p4;
 	}
 
-	// 采样分段计算曲线的近似长度
-	public static float ApproximateLength(System.Func<float, Vector2> norCurve, int sample, bool isClose = false)
+	// 采样计算曲线的近似长度
+	public static float ApproximateCurveLength(System.Func<float, Vector2> norCurve, int sample, bool isClosed = false)
 	{
 		float length = 0;
 
@@ -326,7 +332,7 @@ public static class MathUtility
 			{
 				first = cur; // 记录第一个采样点
 			}
-			else if (i == sample && isClose)
+			else if (i == sample && isClosed)
 			{
 				// 如果是封闭曲线, 记录末尾点到起点的距离
 				length += Vector2.Distance(previous, first);
@@ -340,6 +346,33 @@ public static class MathUtility
 		}
 
 		return length;
+	}
+
+	// 计算路径点的长度
+	public static float CalculatePathLength(IEnumerable<Vector3> waypoints, bool isClosed = false)
+	{
+		float distance = 0f;
+
+		Vector3 previousWaypoint = Vector3.zero;
+		bool isFirstWaypoint = true;
+
+		foreach (Vector3 currentWaypoint in waypoints)
+		{
+			if (isFirstWaypoint)
+			{
+				previousWaypoint = currentWaypoint;
+				isFirstWaypoint = false;
+				continue;
+			}
+
+			distance += Vector3.Distance(previousWaypoint, currentWaypoint);
+			previousWaypoint = currentWaypoint;
+		}
+
+		if (isClosed)
+			distance += Vector3.Distance(previousWaypoint, waypoints.GetEnumerator().Current);
+
+		return distance;
 	}
 
 	// 自定义振幅与频率的sin波函数
@@ -356,5 +389,10 @@ public static class MathUtility
 	{
 		x += xOffset;
 		return amplitude * Mathf.Abs(Mathf.Sin(Mathf.PI * x / cycle)) + yOffset;
+	}
+
+	public static float Cot(float x)
+	{
+		return 1.0f / Mathf.Tan(x);
 	}
 }

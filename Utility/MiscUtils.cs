@@ -21,7 +21,10 @@ public static class MiscUtils
 	{
 		int count = dst.Count;
 		foreach (var tr in src)
-			dst.Add(tr.position);
+		{ 
+			if (tr != null)
+				dst.Add(tr.position);
+		}
 
 		return dst.Count - count;
 	}
@@ -73,18 +76,29 @@ public static class MiscUtils
 		}
 		return dst.Count - count;
 	}
-	public static int ConverAndAppendList<T1, T2>(ref List<T1> dst, IEnumerable<T2> src, bool allowRepeat = false)
+	public static int ConverAndAppendList<ToT, FromT>(ref List<ToT> dst, IEnumerable<FromT> src, bool allowRepeat = false)
 	{
 		int count = dst.Count;
 		foreach (var v in src)
 		{
-			if (v is T1 tv)
+			if (v is ToT tv)
 			{
 				if (allowRepeat == false || dst.IndexOf(tv) < 0)
 					dst.Add(tv);
 			}
 		}
 		return dst.Count - count;
+	}
+
+	public static IEnumerable<ToT> Cast<ToT, FromT>(this IEnumerable<FromT> src, ToT def = default)
+	{
+		foreach (var i in src)
+		{
+			if (i is ToT tv)
+				yield return tv;
+			else
+				yield return def;
+		}
 	}
 
 	public static string Connect(string space, params string[] args)
@@ -141,6 +155,7 @@ public static class MiscUtils
 		line.SetPositions(points);
 	}
 
+	// 待修复 rect.position指示左上角而不是中间
 	public static Rect GetCameraViewport(Camera camera)
 	{
 		var y = camera.orthographicSize * 2;
@@ -149,6 +164,15 @@ public static class MiscUtils
 		var pos = (Vector2)camera.transform.position;
 
 		return new Rect(position: pos, size: new Vector2(x, y));
+	}
+
+	// 在保持与目标距离的同时以forward一面朝向目标
+	public static Vector3 Alignment(Vector3 self, Vector3 target, Vector3 forward)
+	{
+		var dist = (self - target).magnitude;
+		var dir = forward;
+
+		return target - dir * dist;
 	}
 
 #if UNITY_EDITOR
