@@ -37,6 +37,17 @@ public static class MiscUtils
 		return dst.Count - count;
 	}
 
+	public static int ExportPositionFromRoot(ref List<Vector3> dst, Transform root)
+	{
+		int count = dst.Count;
+		foreach (Transform tr in root)
+		{
+			if (tr != null)
+				dst.Add(tr.position);
+		}
+		return dst.Count - count;
+	}
+
 	public static bool InLayer(this GameObject go, string layer)
 		=> InLayer(go, LayerMask.GetMask(layer));
 	public static bool InLayer(this GameObject go, LayerMask layermask)
