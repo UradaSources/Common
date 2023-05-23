@@ -170,6 +170,7 @@ public static class MathUtility
 	}
 
 	// 在abs(v - unit*n) <= tolerance时返回unit*n, 其他情况下返回v
+	// 即当v值足够靠近unit的倍数时, 将返回unit的倍数, 否则返回v, 由tolerance决定距离
 	// 该函数一般用于网格坐标点对齐
 	public static float Align(float v, float unit, float tolerance)
 	{
@@ -348,6 +349,68 @@ public static class MathUtility
 		}
 
 		return length;
+	}
+
+	// 对路径进行平滑
+	public static int SmoothPath(ref List<Vector3> dst, ICollection<Vector3> src, int unitSimple, float frontInsterFactor = 0.5f, float backInsterFactor = 0.5f)
+	{
+		Debug.Assert(frontInsterFactor + backInsterFactor > 0
+			&& frontInsterFactor + backInsterFactor <= 1,
+			"The sum of the facor must be (0-1]");
+
+		int srcCount = src.Count;
+		int dstCount = dst.Count;
+
+		if (srcCount <= 2)
+		{
+			dst.AddRange(src);
+			return dst.Count - dstCount;
+		}
+
+		var itor = src.GetEnumerator();
+
+		// 添加起始点
+		itor.MoveNext();
+		dst.Add(itor.Current);
+
+		// 将迭代器推进到第二个元素
+		// 进入循环后该操作在预读next时执行
+		itor.MoveNext();
+
+		// 在循环中跳过第一个和最后一个位置
+		for (int i = 1; i < srcCount - 1; i++)
+		{
+			// 获取当前点的前后点
+			var cur = itor.Current;
+
+			itor.MoveNext();
+			var next = itor.Current;
+
+			var last = dst[dst.Count - 1];
+
+			// 根据系数在last-cur和cur-next之间计算插入点
+			var ins1 = cur - frontInsterFactor * (cur - last);
+			var ins2 = next - (1.0f - backInsterFactor) * (next - cur);
+
+			// 计算采样数
+			//var len = (ins2 - ins1).magnitude;
+			//int sample = Mathf.Max(1, Mathf.FloorToInt(len * unitSimple));
+
+			// 根据采样数对2个插入点之间的生成的贝塞尔曲线进行采样
+			for (int j = 0; j < unitSimple; j++)
+			{
+				float t = ((float)j) / (unitSimple - 1);
+				var tmp = MathUtility.BezierCurve(ins1, cur, ins2, t);
+
+				// 拐角曲线的采样点
+				dst.Add(tmp);
+			}
+		}
+
+		// 添加未尾点
+		dst.Add(itor.Current);
+
+		return dstCount - dst.Count;
 	}
 
 	// 计算路径点的长度
