@@ -44,7 +44,7 @@ public abstract class Singleton<T> : Singleton where T : MonoBehaviour
 		}
 	}
 
-	protected void Awake()
+	protected virtual void Awake()
 	{
 		if (m_persistent) DontDestroyOnLoad(gameObject);
 	}

@@ -8,46 +8,6 @@ using UnityEditor;
 
 public static class MiscUtils
 {
-	public static bool BitMaskAnd(int mask, int v)
-	{
-		return (v & mask) == v;
-	}
-	public static bool BitMaskOr(int mask, int v)
-	{
-		return (v & mask) != 0;
-	}
-
-	public static int ExportPosition(ref List<Vector3> dst, IEnumerable<Transform> src)
-	{
-		int count = dst.Count;
-		foreach (var tr in src)
-		{ 
-			if (tr != null)
-				dst.Add(tr.position);
-		}
-
-		return dst.Count - count;
-	}
-	public static int ExportPosition(ref List<Vector2> dst, IEnumerable<Transform> src)
-	{
-		int count = dst.Count;
-		foreach (var tr in src)
-			dst.Add(tr.position);
-
-		return dst.Count - count;
-	}
-
-	public static int ExportPositionFromRoot(ref List<Vector3> dst, Transform root)
-	{
-		int count = dst.Count;
-		foreach (Transform tr in root)
-		{
-			if (tr != null)
-				dst.Add(tr.position);
-		}
-		return dst.Count - count;
-	}
-
 	public static bool InLayer(this GameObject go, string layer)
 		=> InLayer(go, LayerMask.GetMask(layer));
 	public static bool InLayer(this GameObject go, LayerMask layermask)
@@ -87,12 +47,12 @@ public static class MiscUtils
 		}
 		return dst.Count - count;
 	}
-	public static int ConverAndAppendList<ToT, FromT>(ref List<ToT> dst, IEnumerable<FromT> src, bool allowRepeat = false)
+	public static int ConverAndAppendList<T1, T2>(ref List<T1> dst, IEnumerable<T2> src, bool allowRepeat = false)
 	{
 		int count = dst.Count;
 		foreach (var v in src)
 		{
-			if (v is ToT tv)
+			if (v is T1 tv)
 			{
 				if (allowRepeat == false || dst.IndexOf(tv) < 0)
 					dst.Add(tv);
@@ -101,16 +61,36 @@ public static class MiscUtils
 		return dst.Count - count;
 	}
 
-	public static IEnumerable<ToT> Cast<ToT, FromT>(this IEnumerable<FromT> src, ToT def = default)
+	public static IEnumerable<T1> Cast<T1, T2>(this IEnumerable<T2> src, T1 def = default)
 	{
 		foreach (var i in src)
 		{
-			if (i is ToT tv)
+			if (i is T1 tv)
 				yield return tv;
 			else
 				yield return def;
 		}
 	}
+	
+	public static IEnumerable<Vector2> Cast(this IEnumerable<Vector3> src)
+	{
+		foreach (var i in src)
+			yield return new Vector2(i.x, i.y);
+	}
+	public static IEnumerable<Vector3> Cast(this IEnumerable<Vector2> src, float z = 0)
+	{
+		foreach (var i in src)
+			yield return new Vector3(i.x, i.y, z);
+	}
+
+	public static IEnumerable<T1> Export<T1, T2>(this IEnumerable<T2> src, System.Func<T2, T1> export)
+	{
+		foreach (var i in src)
+		{
+			yield return export.Invoke(i);
+		}
+	}
+
 
 	public static string Connect(string space, params string[] args)
 	{
@@ -187,6 +167,69 @@ public static class MiscUtils
 		var dir = forward;
 
 		return target - dir * dist;
+	}
+
+	public static bool BitMaskAnd(int mask, int v)
+	{
+		return (v & mask) == v;
+	}
+	public static bool BitMaskOr(int mask, int v)
+	{
+		return (v & mask) != 0;
+	}
+
+	public static int ExportPosition(ref List<Vector3> dst, IEnumerable<Transform> src)
+	{
+		int count = dst.Count;
+		foreach (var tr in src)
+		{
+			if (tr != null)
+				dst.Add(tr.position);
+		}
+
+		return dst.Count - count;
+	}
+	public static int ExportPosition(ref List<Vector2> dst, IEnumerable<Transform> src)
+	{
+		int count = dst.Count;
+		foreach (var tr in src)
+			dst.Add(tr.position);
+
+		return dst.Count - count;
+	}
+
+	public static int ExportPositionFromRoot(ref List<Vector3> dst, Transform root)
+	{
+		int count = dst.Count;
+		foreach (Transform tr in root)
+		{
+			if (tr != null)
+				dst.Add(tr.position);
+		}
+		return dst.Count - count;
+	}
+
+	public static string FormatContainer<T>(IEnumerable<T> container, System.Func<T, string> toString = null)
+	{
+		if (toString == null) toString = (T t) => t.ToString();
+
+		bool first = false;
+
+		string str = "{";
+		foreach (T child in container)
+		{
+			if (first)
+			{
+				str += toString.Invoke(child);
+				first = false;
+			}
+			else
+			{
+				str += ", " + toString.Invoke(child);
+			}
+		}
+		str += "}";
+		return str;
 	}
 
 #if UNITY_EDITOR
