@@ -36,10 +36,10 @@ public class CircleAroundTrigger : MonoBehaviour
 
 	public float ProcessPer { get => m_processPer; }
 
-	public float TriggerThreshold 
-	{ 
+	public float TriggerThreshold
+	{
 		get => m_triggerThreshold;
-		set => m_triggerThreshold = Mathf.Max(value, 1); 
+		set => m_triggerThreshold = Mathf.Max(value, 1);
 	}
 
 	// 清理记录的角度差值

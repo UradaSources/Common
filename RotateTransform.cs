@@ -11,16 +11,16 @@ public class RotateTransform : MonoBehaviour
 	[SerializeField]
 	private float m_speedScale = 1;
 
-	public float Speed 
-	{ 
-		get => m_speed; 
+	public float Speed
+	{
+		get => m_speed;
 		set => m_speed = Mathf.Max(value, 0);
 	}
 
-	public float SpeedScale 
-	{ 
-		get => m_speedScale; 
-		set => m_speedScale = Mathf.Max(value, 0); 
+	public float SpeedScale
+	{
+		get => m_speedScale;
+		set => m_speedScale = Mathf.Max(value, 0);
 	}
 
 	private void Update()
@@ -35,13 +35,13 @@ public class RotateTransform : MonoBehaviour
 			m_rb.MoveRotation(angle);
 		}
 		else
-		{ 
+		{
 			var angle = this.transform.localEulerAngles;
 
 			angle.z += m_speed * Time.deltaTime;
 			angle.z = MathUtility.Loop(angle.z, 360.0f);
 
-			this.transform.localEulerAngles = angle;			
+			this.transform.localEulerAngles = angle;
 		}
 	}
 

@@ -13,7 +13,7 @@ public class Gravity : MonoBehaviour
 
 	[SerializeField]
 	private AnimationCurve m_forceCurve;
-	
+
 	[SerializeField]
 	private LayerMask m_mask;
 
@@ -59,7 +59,7 @@ public class Gravity : MonoBehaviour
 	private void Reset()
 	{
 		this.gameObject.TryGetComponent(out m_trigger);
-		if (m_trigger) m_trigger.isTrigger = true;	
+		if (m_trigger) m_trigger.isTrigger = true;
 
 		m_forceCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 	}

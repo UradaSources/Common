@@ -8,7 +8,7 @@ public class AutoRecycle : MonoBehaviour
 	public UnityEvent<GameObject> OnReadyRecycle = new UnityEvent<GameObject>();
 
 	[SerializeField]
-	private bool m_forceDisable = true; 
+	private bool m_forceDisable = true;
 
 	[Space(10)]
 

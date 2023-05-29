@@ -1,3 +1,4 @@
+/*urada 2023/5/29*/
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -61,7 +62,7 @@ public static class MiscUtils
 		return dst.Count - count;
 	}
 
-	public static IEnumerable<T1> Cast<T1, T2>(this IEnumerable<T2> src, T1 def = default)
+	public static IEnumerable<T1> TryCast<T1, T2>(this IEnumerable<T2> src, T1 def = default)
 	{
 		foreach (var i in src)
 		{
@@ -71,7 +72,7 @@ public static class MiscUtils
 				yield return def;
 		}
 	}
-	
+
 	public static IEnumerable<Vector2> Cast(this IEnumerable<Vector3> src)
 	{
 		foreach (var i in src)
@@ -86,11 +87,8 @@ public static class MiscUtils
 	public static IEnumerable<T1> Export<T1, T2>(this IEnumerable<T2> src, System.Func<T2, T1> export)
 	{
 		foreach (var i in src)
-		{
 			yield return export.Invoke(i);
-		}
 	}
-
 
 	public static string Connect(string space, params string[] args)
 	{
@@ -99,7 +97,7 @@ public static class MiscUtils
 
 		string result = "";
 		for (int i = 0; i < args.Length - 1; i++)
-		{ 
+		{
 			if (!string.IsNullOrEmpty(args[i]))
 				result += args[i] + space;
 		}
@@ -178,35 +176,21 @@ public static class MiscUtils
 		return (v & mask) != 0;
 	}
 
-	public static int ExportPosition(ref List<Vector3> dst, IEnumerable<Transform> src)
+	public static IEnumerable<T2> Process<T1, T2>(IEnumerable<T1> src, System.Func<T1, T2> handle)
 	{
-		int count = dst.Count;
-		foreach (var tr in src)
-		{
-			if (tr != null)
-				dst.Add(tr.position);
-		}
-
-		return dst.Count - count;
-	}
-	public static int ExportPosition(ref List<Vector2> dst, IEnumerable<Transform> src)
-	{
-		int count = dst.Count;
-		foreach (var tr in src)
-			dst.Add(tr.position);
-
-		return dst.Count - count;
+		foreach (var i in src)
+			yield return handle.Invoke(i);
 	}
 
-	public static int ExportPositionFromRoot(ref List<Vector3> dst, Transform root)
+	public static IEnumerable<Vector3> ExportPosition(IEnumerable<Transform> src, bool local = false)
 	{
-		int count = dst.Count;
+		foreach (var tr in src)
+			yield return local ? tr.localPosition : tr.position;
+	}
+	public static IEnumerable<Vector3> ExportPositionFromRoot(Transform root)
+	{
 		foreach (Transform tr in root)
-		{
-			if (tr != null)
-				dst.Add(tr.position);
-		}
-		return dst.Count - count;
+			yield return tr.position;
 	}
 
 	public static string FormatContainer<T>(IEnumerable<T> container, System.Func<T, string> toString = null)
@@ -243,11 +227,11 @@ public static class MiscUtils
 		foreach (var obj in selected)
 		{
 			if (obj is GameObject go)
-			{ 
+			{
 				// 检查是否是场景中的对象
 				if (inScene && string.IsNullOrEmpty(go.scene.name))
 					continue;
-				
+
 				result.Add(go);
 			}
 		}
@@ -277,7 +261,7 @@ public static class MiscUtils
 		foreach (var obj in selected)
 		{
 			// 只处理场景中的对象
-			if (obj is T to && checker(to))
+			if (obj is T to && (checker == null || checker.Invoke(to)))
 				result.Add(to);
 		}
 
@@ -294,6 +278,25 @@ public static class MiscUtils
 				return go;
 		}
 		return null;
+	}
+
+	public static float GetGizmoSize(Vector3 position, Camera camera = null)
+	{
+		camera = camera ?? Camera.current;
+		position = Gizmos.matrix.MultiplyPoint(position);
+
+		if (camera)
+		{
+			Transform transform = camera.transform;
+			Vector3 position2 = transform.position;
+			float z = Vector3.Dot(position - position2, transform.TransformDirection(new Vector3(0f, 0f, 1f)));
+			Vector3 a = camera.WorldToScreenPoint(position2 + transform.TransformDirection(new Vector3(0f, 0f, z)));
+			Vector3 b = camera.WorldToScreenPoint(position2 + transform.TransformDirection(new Vector3(1f, 0f, z)));
+			float magnitude = (a - b).magnitude;
+			return 80f / Mathf.Max(magnitude, 0.0001f);
+		}
+
+		return 20f;
 	}
 #endif
 }

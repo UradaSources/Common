@@ -67,7 +67,7 @@ public class InstancePool<T> where T : Component
 				yield return obj;
 		}
 	}
-	
+
 	public IEnumerable<T> GetActivedInstance()
 	{
 		foreach (var obj in m_instances)

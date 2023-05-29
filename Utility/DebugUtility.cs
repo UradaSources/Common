@@ -1,3 +1,5 @@
+/*urada 2023/5/29*/
+
 #define DEBUG_UTILITY_DEFINED
 
 using System.Collections.Generic;
@@ -69,8 +71,10 @@ public static class DebugUtility
 		left = Quaternion.AngleAxis(Vector2.Angle(vec, Vector2.zero) + ArrowHeadAngle, Vector3.forward) * left;
 		right = Quaternion.AngleAxis(Vector2.Angle(vec, Vector2.zero) - ArrowHeadAngle, Vector3.forward) * right;
 
-		float scale = HandleUtility.GetHandleSize(pos);
+		float scale = MiscUtils.GetGizmoSize(pos, SceneView.lastActiveSceneView.camera);
 		param.size *= scale;
+
+		UnityEngine.Debug.Log(scale);
 
 		DebugUtility.DrawRay(pos + vec, left * param.size, args);
 		DebugUtility.DrawRay(pos + vec, right * param.size, args);
@@ -82,7 +86,7 @@ public static class DebugUtility
 		var vec = target - start;
 		DebugUtility.DrawArrow(start, vec, args);
 	}
-	
+
 	[Conditional("UNITY_EDITOR")]
 	public static void DrawLine(Vector3 a, Vector3 b, DrawParam? args = null)
 	{
@@ -96,7 +100,7 @@ public static class DebugUtility
 		var param = args ?? DrawParam.Default;
 		UnityEngine.Debug.DrawRay(pos, vec, param.color, param.duration, param.deepTest);
 	}
-	
+
 	[Conditional("UNITY_EDITOR")]
 	public static void DrawLines(IEnumerable<Vector3> points, bool isClosed = false, bool markPoint = false, DrawParam? args = null)
 	{
@@ -111,20 +115,20 @@ public static class DebugUtility
 				DebugUtility.DrawMark(cur, args);
 
 			if (!recordFirst)
-			{ 
+			{
 				first = cur;
 				recordFirst = true;
 			}
 			else
 				DebugUtility.DrawLine(previous, cur, args);
-
+			
 			previous = cur;
 		}
 
 		if (isClosed)
 			DebugUtility.DrawLine(previous, first, args);
 	}
-	
+
 	[Conditional("UNITY_EDITOR")]
 	public static void DrawBox(Vector2 pos, Vector2 size, float angle = 0, DrawParam? args = null)
 	{
@@ -150,10 +154,10 @@ public static class DebugUtility
 		DebugUtility.DrawLine(p3, p4, args);
 		DebugUtility.DrawLine(p4, p1, args);
 	}
-	
+
 	[Conditional("UNITY_EDITOR")]
 	public static void DrawRange(Vector2 min, Vector2 max, DrawParam? args = null)
-	{ 
+	{
 		DrawBox(Vector2.Lerp(min, max, 0.5f), (max - min), 0, args);
 
 		DrawMark(min, args);
@@ -187,7 +191,7 @@ public static class DebugUtility
 			previous = cur;
 		}
 	}
-	
+
 	[Conditional("UNITY_EDITOR")]
 	public static void DrawBoxCast(Vector2 pos, Vector2 size, float angle, Vector2 dir, float dist, DrawParam? args = null)
 	{

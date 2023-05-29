@@ -9,7 +9,7 @@ public class RangeGravity : MonoBehaviour
 
 	[SerializeField]
 	private AnimationCurve m_forceCurve;
-	
+
 	[SerializeField]
 	private ContactFilter2D m_triggerFilter;
 

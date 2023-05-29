@@ -135,13 +135,13 @@ public class SimpleTrigger : MonoBehaviour
 
 		// 移除需要移除的条件
 		if (_toBeRemoveConditionIndex.Count > 0)
-		{ 
+		{
 			for (int j = _toBeRemoveConditionIndex.Count - 1; j >= 0; j--)
 			{
 				var index = _toBeRemoveConditionIndex[j];
 				m_conditions.RemoveAt(index);
 			}
-			_toBeRemoveConditionIndex.Clear();			
+			_toBeRemoveConditionIndex.Clear();
 		}
 	}
 

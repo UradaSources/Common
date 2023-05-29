@@ -1,116 +1,8 @@
+/*urada 2023/5/29*/
 #define MATH_UTILITY_DEFINED
 using System.Collections.Generic;
 using System.Collections;
 using UnityEngine;
-using System.Linq;
-
-[System.Serializable]
-public struct WRect
-{
-	public static WRect CreateByMinMax(Vector2 max, Vector2 min)
-	{
-		var rect = new WRect
-		{
-			Max = max,
-			Min = min
-		};
-		return rect;
-	}
-
-	public static bool Overlap(WRect r1, WRect r2)
-	{
-		return !(r1.Left > r2.Right
-			|| r1.Right < r2.Left
-			|| r1.Bottom > r2.Top
-			|| r1.Top < r2.Bottom);
-	}
-
-	public static bool Contains(WRect r1, WRect r2)
-	{
-		return r1.Left <= r2.Left
-			&& r1.Right >= r2.Right
-			&& r1.Bottom <= r2.Bottom
-			&& r1.Top >= r2.Top;
-	}
-
-	public static WRect Intersection(WRect r1, WRect r2)
-	{
-		float left = Mathf.Max(r1.Left, r2.Left);
-		float right = Mathf.Min(r1.Right, r2.Right);
-		float bottom = Mathf.Max(r1.Bottom, r2.Bottom);
-		float top = Mathf.Min(r1.Top, r2.Top);
-
-		return WRect.CreateByMinMax(new Vector2(right, top), new Vector2(left, bottom));
-	}
-
-	public override string ToString()
-	{
-		return $"WRect{{{centre}, {size}}}";
-	}
-
-	public Vector2 centre;
-	public Vector2 size;
-
-	public Vector2 HalfSize { get => this.size * 0.5f; }
-
-	public Vector2 Min
-	{
-		set
-		{
-			Debug.Assert(value.x <= this.Max.x && value.y <= this.Max.y);
-
-			var max = this.Max;
-
-			this.size = max - value;
-			this.centre = Vector2.Lerp(value, max, 0.5f);
-		}
-		get => centre - this.HalfSize;
-	}
-	public Vector2 Max
-	{
-		set
-		{
-			Debug.Assert(value.x >= this.Min.x && value.y >= this.Min.y);
-
-			var min = this.Min;
-
-			this.size = value - min;
-			this.centre = Vector2.Lerp(min, value, 0.5f);
-		}
-		get => centre + this.HalfSize;
-	}
-
-	public float Left
-	{
-		set => this.Min = new Vector2(value, this.Min.y);
-		get => this.centre.x - this.HalfSize.x;
-	}
-	public float Right
-	{
-		set => this.Max = new Vector2(value, this.Max.y);
-		get => this.centre.x + this.HalfSize.x;
-	}
-
-	public float Bottom
-	{
-		set => this.Min = new Vector2(this.Min.x, value);
-		get => this.centre.y - this.HalfSize.y;
-	}
-	public float Top
-	{
-		set => this.Max = new Vector2(this.Max.x, value);
-		get => this.centre.y + this.HalfSize.y;
-	}
-
-	public void SetPositionFromMinPoint(Vector2 value)
-	{
-		this.centre = value + this.HalfSize;
-	}
-	public void SetPositionFromMaxPoint(Vector2 value)
-	{
-		this.centre = value - this.HalfSize;
-	}
-}
 
 public static class MathUtility
 {
@@ -461,3 +353,114 @@ public static class MathUtility
 		return 1.0f / Mathf.Tan(x);
 	}
 }
+
+/*
+[System.Serializable]
+public struct WRect
+{
+	public static WRect CreateByMinMax(Vector2 max, Vector2 min)
+	{
+		var rect = new WRect
+		{
+			Max = max,
+			Min = min
+		};
+		return rect;
+	}
+
+	public static bool Overlap(WRect r1, WRect r2)
+	{
+		return !(r1.Left > r2.Right
+			|| r1.Right < r2.Left
+			|| r1.Bottom > r2.Top
+			|| r1.Top < r2.Bottom);
+	}
+
+	public static bool Contains(WRect r1, WRect r2)
+	{
+		return r1.Left <= r2.Left
+			&& r1.Right >= r2.Right
+			&& r1.Bottom <= r2.Bottom
+			&& r1.Top >= r2.Top;
+	}
+
+	public static WRect Intersection(WRect r1, WRect r2)
+	{
+		float left = Mathf.Max(r1.Left, r2.Left);
+		float right = Mathf.Min(r1.Right, r2.Right);
+		float bottom = Mathf.Max(r1.Bottom, r2.Bottom);
+		float top = Mathf.Min(r1.Top, r2.Top);
+
+		return WRect.CreateByMinMax(new Vector2(right, top), new Vector2(left, bottom));
+	}
+
+	public override string ToString()
+	{
+		return $"WRect{{{centre}, {size}}}";
+	}
+
+	public Vector2 centre;
+	public Vector2 size;
+
+	public Vector2 HalfSize { get => this.size * 0.5f; }
+
+	public Vector2 Min
+	{
+		set
+		{
+			Debug.Assert(value.x <= this.Max.x && value.y <= this.Max.y);
+
+			var max = this.Max;
+
+			this.size = max - value;
+			this.centre = Vector2.Lerp(value, max, 0.5f);
+		}
+		get => centre - this.HalfSize;
+	}
+	public Vector2 Max
+	{
+		set
+		{
+			Debug.Assert(value.x >= this.Min.x && value.y >= this.Min.y);
+
+			var min = this.Min;
+
+			this.size = value - min;
+			this.centre = Vector2.Lerp(min, value, 0.5f);
+		}
+		get => centre + this.HalfSize;
+	}
+
+	public float Left
+	{
+		set => this.Min = new Vector2(value, this.Min.y);
+		get => this.centre.x - this.HalfSize.x;
+	}
+	public float Right
+	{
+		set => this.Max = new Vector2(value, this.Max.y);
+		get => this.centre.x + this.HalfSize.x;
+	}
+
+	public float Bottom
+	{
+		set => this.Min = new Vector2(this.Min.x, value);
+		get => this.centre.y - this.HalfSize.y;
+	}
+	public float Top
+	{
+		set => this.Max = new Vector2(this.Max.x, value);
+		get => this.centre.y + this.HalfSize.y;
+	}
+
+	public void SetPositionFromMinPoint(Vector2 value)
+	{
+		this.centre = value + this.HalfSize;
+	}
+	public void SetPositionFromMaxPoint(Vector2 value)
+	{
+		this.centre = value - this.HalfSize;
+	}
+}
+
+ */

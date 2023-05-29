@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEditor;
 
 public class MiscToolWindow : EditorWindow
-{	
+{
 	[MenuItem("Custom/Misc Tool Window")]
 	private static void Init()
 	{
@@ -12,13 +12,11 @@ public class MiscToolWindow : EditorWindow
 		window.Show();
 	}
 
-	private bool m_openPosAlignmentTool = false;
+	// private bool m_openPosAlignmentTool = false;
 	private PositionAlignmentTool m_positionAlignmentTool = new PositionAlignmentTool();
 
 	private void OnGUI()
 	{
-		m_openPosAlignmentTool = EditorGUILayout.Foldout(m_openPosAlignmentTool, "Position Alignment Tool");
-		if (m_openPosAlignmentTool)
-			m_positionAlignmentTool.Draw(this.position);
+		m_positionAlignmentTool.Draw(this.position);
 	}
 }

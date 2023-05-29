@@ -134,7 +134,7 @@ public class CircularRangeLine : MonoBehaviour
 	private void Reset()
 	{
 		if (!m_renderer)
-		{ 
+		{
 			MiscUtils.RequiredComponent(this, out m_renderer);
 
 			m_renderer.loop = true;
