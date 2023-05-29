@@ -74,8 +74,6 @@ public static class DebugUtility
 		float scale = MiscUtils.GetGizmoSize(pos, SceneView.lastActiveSceneView.camera);
 		param.size *= scale;
 
-		UnityEngine.Debug.Log(scale);
-
 		DebugUtility.DrawRay(pos + vec, left * param.size, args);
 		DebugUtility.DrawRay(pos + vec, right * param.size, args);
 	}
