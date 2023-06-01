@@ -202,7 +202,7 @@ public static class DebugUtility
 	}
 
 	[Conditional("UNITY_EDITOR")]
-	public static void DrawCurve(System.Func<float, Vector2> normalizedCurve, int sample, bool isClosed = false, DrawParam? args = null)
+	public static void DrawCurve(System.Func<float, Vector2> curve, int sample, bool isClosed = false, DrawParam? args = null)
 	{
 		Vector2 first = default;
 		Vector2 previous = default;
@@ -211,7 +211,7 @@ public static class DebugUtility
 		{
 			float t = Mathf.Clamp01(((float)i) / sample);
 
-			Vector2 cur = normalizedCurve(t);
+			Vector2 cur = curve(t);
 
 			if (i == 0)
 				first = cur; // 记录第一个采样点
@@ -224,6 +224,36 @@ public static class DebugUtility
 			previous = cur;
 		}
 	}
+
+	[Conditional("UNITY_EDITOR")]
+	public static void DrawNormalizedCurveTo(System.Func<float, float> normalizedCurve, int sample, Vector2 max, Vector2 min, bool isClosed = false, DrawParam? args = null)
+	{
+		Vector2 first = default;
+		Vector2 previous = default;
+
+		for (int i = 0; i <= sample; i++)
+		{
+			// 计算归一点并将其映射到范围中
+			float t = Mathf.Clamp01(((float)i) / sample);
+			var r = normalizedCurve(t); // y值
+
+			var x = Mathf.LerpUnclamped(min.x, max.x, t);
+			var y = Mathf.LerpUnclamped(min.y, max.y, r);
+
+			var cur = new Vector2(x, y);
+
+			if (i == 0)
+				first = cur; // 记录第一个采样点
+			else if (i == sample && isClosed)
+				// 如果是封闭曲线, 连接末尾点到起点
+				DebugUtility.DrawLine(previous, first, args);
+			else
+				DebugUtility.DrawLine(previous, cur, args);
+
+			previous = cur;
+		}
+	}
+
 
 	//public static void DrawMesgOnScreen(Vector2 screenPos, string richMesg)
 	//{
