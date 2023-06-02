@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEditor;
 #endif
 
+// 一些迭代器拓展方法可能和system.linq中的重复
 public static class MiscUtils
 {
 	public static bool InLayer(this GameObject go, string layer)
@@ -38,16 +39,17 @@ public static class MiscUtils
 		return Random.value > 0.5f;
 	}
 
-	public static int AppendList<T>(ref List<T> dst, IEnumerable<T> src, bool allowRepeat = false)
+	public static int AddDistinct<T>(ref List<T> dst, IEnumerable<T> src)
 	{
 		int count = dst.Count;
 		foreach (var v in src)
 		{
-			if (allowRepeat || dst.IndexOf(v) < 0)
+			if (dst.IndexOf(v) < 0)
 				dst.Add(v);
 		}
 		return dst.Count - count;
 	}
+
 	public static int ConverAndAppendList<T1, T2>(ref List<T1> dst, IEnumerable<T2> src, bool allowRepeat = false)
 	{
 		int count = dst.Count;
@@ -216,71 +218,166 @@ public static class MiscUtils
 		return str;
 	}
 
-#if UNITY_EDITOR
-	// 获取当前选中的GO
-	// 将保留选择顺序
-	public static int GetSelectedGameObjectsByOrder(ref List<GameObject> result, bool inScene = true)
+	// 过渡到正交视图
+	public static IEnumerator CameraToOrthViewProcess(Camera camera, float duration, float focusDist, float fovTarget = 1)
 	{
-		int count = result.Count;
+		// 记录原始的fov值
+		var fovStart = camera.fieldOfView;
 
+		// 计算固定的视角大小
+		/* 视口锥台的高度与底边宽度
+			Camera
+				/+\ angle=fov
+				-+- near
+			   / + \
+			  /  +  \
+			 /   +   \
+			---Target== far
+			/    |    \
+		整个锥体的角度为fov
+		由+标注的即为dist, 由=标注的即为size
+		在计算过程中将其视为一个直角三角形, 由三角函数计算另外2对参数的值
+		*/
+		var halfFovAngle = fovStart * 0.5f * Mathf.Deg2Rad;
+		var size = Mathf.Tan(halfFovAngle) * focusDist;
+
+		var camTr = camera.transform;
+		var focusPoint = camTr.position + camTr.forward * focusDist;
+
+		for (float t = 0; t < duration; t += Time.deltaTime)
+		{
+			float r = Mathf.Clamp01(t / duration);
+			camera.fieldOfView = Mathf.Lerp(fovStart, fovTarget, r);
+
+			// 根据fov来更新目标到摄像机的距离
+			// 随着fov越来越小, dist将越来越大来保持size不变
+			var dist = MathUtility.Cot(camera.fieldOfView * 0.5f * Mathf.Deg2Rad) * size;
+
+			// 更新摄像机的位置
+			var pos = focusPoint - camTr.forward * dist;
+			camTr.position = pos;
+
+			yield return null;
+		}
+
+		// 在过渡动画完成后将视角切换为正交
+		camera.orthographic = true;
+		camera.orthographicSize = size;
+	}
+
+	// 过渡到透视视图
+	public static IEnumerator CameraToPersViewProcess(Camera camera, float duration, float focusDist, float fovTarget = 60)
+	{
+		// 记录原始的fov值
+		var fovStart = camera.fieldOfView;
+
+		// 计算固定的视角大小
+		/* 视口锥台的高度与底边宽度
+			Camera
+				/+\ angle=fov
+				-+- near
+			   / + \
+			  /  +  \
+			 /   +   \
+			---Target== far
+			/    |    \
+		整个锥体的角度为fov
+		由+标注的即为dist, 由=标注的即为size
+		在计算过程中将其视为一个直角三角形, 由三角函数计算另外2对参数的值
+		*/
+		var halfFovAngle = fovStart * 0.5f * Mathf.Deg2Rad;
+		var size = camera.orthographicSize;
+
+		Debug.Assert(Mathf.Abs(halfFovAngle - 1.0f) < 10);
+
+		var camTr = camera.transform;
+		var focusPoint = camTr.position + camTr.forward * focusDist;
+
+		// 初始化, 将相机移动到足够远的距离后设置为正交视角, 再逐渐拉近到正常位置
+		var startDist = MathUtility.Cot(halfFovAngle) * size;
+
+		var startPos = focusPoint - camTr.forward * startDist;
+		camTr.position = startPos;
+
+		// 设置回正交视角
+		camera.orthographic = false;
+
+		// 逐渐拉近
+		for (float t = 0; t < duration; t += Time.deltaTime)
+		{
+			float r = Mathf.Clamp01(t / duration);
+			camera.fieldOfView = Mathf.Lerp(fovStart, fovTarget, r);
+
+			// 根据fov来更新目标到摄像机的距离
+			// 随着fov越来越大, dist将越来越小来保持size不变
+			var dist = MathUtility.Cot(camera.fieldOfView * 0.5f * Mathf.Deg2Rad) * size;
+
+			// 更新摄像机的位置
+			var pos = focusPoint - camTr.forward * dist;
+			camTr.position = pos;
+
+			yield return null;
+		}
+	}
+
+#if UNITY_EDITOR
+	// 按顺序获取被选中的GameObject
+	public static IEnumerable<GameObject> GetSelectedGameObjectsByOrder(bool inScene = true, System.Func<GameObject, bool> filter = null)
+	{
 		var selected = Selection.objects;
 		foreach (var obj in selected)
 		{
 			if (obj is GameObject go)
 			{
-				// 检查是否是场景中的对象
+				// 检查是否是场景中的对象且通过过滤器
 				if (inScene && string.IsNullOrEmpty(go.scene.name))
 					continue;
+				if (filter != null && filter.Invoke(go))
+					continue;
 
-				result.Add(go);
+				yield return go;
 			}
 		}
-		return result.Count - count;
 	}
-	public static int GetSelectedComponentsByOrder<T>(ref List<T> result)
+
+	// 按顺序遍历被选中对象且尝试获取目标组件并返回
+	public static IEnumerable<T> GetSelectedComponentsByOrder<T>()
 		where T : Component
 	{
-		int count = result.Count;
-
 		var selected = Selection.objects;
 		foreach (var obj in selected)
 		{
 			if (obj is GameObject go && go.TryGetComponent(out T com))
-				result.Add(com);
+				yield return com;
 		}
-
-		return result.Count - count;
 	}
 
-	public static int GetSelectedByOrder<T>(ref List<T> result, System.Func<T, bool> checker = null)
+	// 按顺序获取被选中的任意对象, 必须继承自UnityEngine.Object
+	// 使用过滤器进行过滤
+	public static IEnumerable<T> GetSelectedByOrder<T>(System.Func<T, bool> filter = null)
 		where T : UnityEngine.Object
 	{
-		int count = result.Count;
-
 		var selected = Selection.objects;
 		foreach (var obj in selected)
 		{
-			// 只处理场景中的对象
-			if (obj is T to && (checker == null || checker.Invoke(to)))
-				result.Add(to);
+			if (obj is T to && (filter == null || filter.Invoke(to)))
+				yield return to;
 		}
-
-		return result.Count - count;
 	}
 
-	public static GameObject GetSelectedGameObjectInScene()
+	// 获取场景中被选中的GameObject
+	public static IEnumerable<GameObject> GetSelectedGameObjectInScene()
 	{
 		var selected = Selection.objects;
 		foreach (var obj in selected)
 		{
 			// 只处理场景中的对象
 			if (obj is GameObject go && !string.IsNullOrEmpty(go.scene.name))
-				return go;
+				yield return go;
 		}
-		return null;
 	}
 
-	public static float GetGizmoSize(Vector3 position, Camera camera = null)
+	public static float GizmoScale(Vector3 position, Camera camera = null)
 	{
 		camera = camera ?? Camera.current;
 		position = Gizmos.matrix.MultiplyPoint(position);
@@ -297,6 +394,65 @@ public static class MiscUtils
 		}
 
 		return 20f;
+	}
+
+	// 编辑器快速操作
+	// 不可用, 待修复
+	// 对当前选中的在编辑器中的GameObject的子对象进行反向排序
+	// [MenuItem("MiscUtils/Reverse Selected GameObjects Child")]
+	private static void ReverseSelectedChild()
+	{
+		var itor = MiscUtils.GetSelectedComponentsByOrder<Transform>();
+		var result = new List<Transform>(itor);
+
+		// 储存位置方便撤销
+		List<Transform> childs = new List<Transform>();
+		foreach (var tr in result)
+		{
+			foreach (Transform child in tr)
+				childs.Add(child);
+		}
+		Undo.RecordObjects(childs.ToArray(), "Spacing Spacing YAxis");
+
+		foreach (var tr in result)
+		{
+			for (int i = 0; i < tr.childCount; i++)
+				tr.GetChild(0).SetAsLastSibling();
+		}
+	}
+
+	// 编辑器快速操作
+	// 首先在选中的所有对象中计算ymin和ymax, 再进行均匀分布
+	[MenuItem("MiscUtils/Spacing YAxis")]
+	public static void SpacingYAxis()
+	{
+		var itor = MiscUtils.GetSelectedComponentsByOrder<Transform>();
+		var result = new List<Transform>(itor);
+
+		if (result.Count <= 1) return;
+
+		// 储存位置方便撤销
+		Undo.RecordObjects(result.ToArray(), "Spacing Spacing YAxis");
+
+		float yMax = float.MinValue;
+		float yMin = float.MaxValue;
+
+		foreach (var i in result)
+		{
+			var pos = i.transform.localPosition;
+			yMax = Mathf.Max(pos.y, yMax);
+			yMin = Mathf.Min(pos.y, yMin);
+		}
+
+		var yDelta = (yMax - yMin) / (result.Count - 1);
+
+		for (int i = 0; i < result.Count; i++)
+		{
+			var pos = result[i].transform.localPosition;
+			pos.y = yDelta * i + yMin;
+
+			result[i].transform.localPosition = pos;
+		}
 	}
 #endif
 }
