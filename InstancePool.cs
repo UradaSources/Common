@@ -30,6 +30,11 @@ public class InstancePool<T> where T : Component
 		}
 	}
 
+	public Transform Root 
+	{
+		get => m_root; 
+	}
+
 	public void Resize(int size)
 	{
 		if (this.Count >= size) return;

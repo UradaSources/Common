@@ -71,7 +71,7 @@ public static class DebugUtility
 		left = Quaternion.AngleAxis(Vector2.Angle(vec, Vector2.zero) + ArrowHeadAngle, Vector3.forward) * left;
 		right = Quaternion.AngleAxis(Vector2.Angle(vec, Vector2.zero) - ArrowHeadAngle, Vector3.forward) * right;
 
-		float scale = MiscUtils.GetGizmoSize(pos, SceneView.lastActiveSceneView.camera);
+		float scale = MiscUtils.GizmoScale(pos, SceneView.lastActiveSceneView.camera);
 		param.size *= scale;
 
 		DebugUtility.DrawRay(pos + vec, left * param.size, args);
