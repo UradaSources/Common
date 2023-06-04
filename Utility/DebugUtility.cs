@@ -158,8 +158,8 @@ public static class DebugUtility
 	{
 		DrawBox(Vector2.Lerp(min, max, 0.5f), (max - min), 0, args);
 
-		DrawMark(min, args);
-		DrawMark(max, args);
+		DrawMark(min, DrawParam.Default);
+		DrawMark(max, DrawParam.Default);
 	}
 
 	[Conditional("UNITY_EDITOR")]

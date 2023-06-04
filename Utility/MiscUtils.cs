@@ -73,18 +73,18 @@ public static class MiscUtils
 		}
 	}
 
-	public static IEnumerable<Vector2> Cast(this IEnumerable<Vector3> src)
+	public static IEnumerable<Vector2> CastToVec2(this IEnumerable<Vector3> src)
 	{
 		foreach (var i in src)
 			yield return new Vector2(i.x, i.y);
 	}
-	public static IEnumerable<Vector3> Cast(this IEnumerable<Vector2> src, float z = 0)
+	public static IEnumerable<Vector3> CastToVec3(this IEnumerable<Vector2> src, float z = 0)
 	{
 		foreach (var i in src)
 			yield return new Vector3(i.x, i.y, z);
 	}
 
-	public static IEnumerable<T1> Export<T1, T2>(this IEnumerable<T2> src, System.Func<T2, T1> export)
+	public static IEnumerable<T1> Process<T1, T2>(this IEnumerable<T2> src, System.Func<T2, T1> export)
 	{
 		foreach (var i in src)
 			yield return export.Invoke(i);
@@ -252,7 +252,7 @@ public static class MiscUtils
 		return result.Count - count;
 	}
 
-	public static int GetSelectedByOrder<T>(ref List<T> result, System.Func<T, bool> checker = null)
+	public static int GetSelectedObjectByOrder<T>(ref List<T> result, System.Func<T, bool> checker = null)
 		where T : UnityEngine.Object
 	{
 		int count = result.Count;
@@ -298,6 +298,102 @@ public static class MiscUtils
 
 		return 20f;
 	}
+
+	// 绘制纹理
+	public static void GUIDrawTexture(Sprite sprite, float height, float? x_offset = null)
+	{
+		var rect = EditorGUILayout.GetControlRect(false, height);
+
+		// 绘制底色
+		EditorGUI.DrawRect(rect, new Color(0.31f, 0.31f, 0.31f));
+
+		if (sprite != null)
+		{
+			// 计算精灵的绘制大小
+			// 为了维持精灵的比例
+			// 以高度为标准, 计算实际高度与绘制高度的比值
+			// 再将宽度乘以比值
+			var r = rect.height / sprite.rect.height;
+			var size = new Vector2(r * sprite.rect.width, rect.height);
+
+			// 计算精灵的绘制坐标
+			// 若没有提供特定偏移则设为中心
+			x_offset = x_offset ?? rect.width * 0.5f;
+			var pos = new Vector2(x_offset.Value, rect.y);
+
+			rect.size = size;
+			rect.position = pos;
+
+			// 计算精灵在纹理上的归一矩形
+			var tex_rect = sprite.textureRect;
+
+			var tex_size = new Vector2(sprite.texture.width, sprite.texture.height);
+
+			tex_rect.position /= tex_size;
+			tex_rect.size /= tex_size;
+
+			EditorGUI.DrawRect(rect, new Color(1.0f, 0.0f, 1.0f));
+			GUI.DrawTextureWithTexCoords(rect, sprite.texture, tex_rect);
+		}
+		else
+		{
+			var content = new GUIContent("No Image");
+			var size = EditorStyles.label.CalcSize(content);
+
+			var pos = rect.center - size * 0.5f;
+
+			rect.size = size;
+			rect.position = pos;
+
+			GUI.Label(rect, content, EditorStyles.label);
+		}
+	}
+
+	// 绘制单条条目
+	public static bool GUIOptional(bool selected, string content)
+	{
+		return EditorGUILayout.Toggle(selected, EditorStyles.miniButton);
+		// var pos = EditorGUILayout.GetControlRect();
+
+		//Color bg_color = selected ? new Color(0.3f, 0.3f, 0.3f) : new Color(0.2f, 0.2f, 0.2f);
+		//if (Event.current.type == EventType.Repaint && pos.Contains(Event.current.mousePosition))
+		//{
+		//	bg_color = new Color(0.25f, 0.25f, 0.25f);
+		//}
+		//else if (Event.current.type == EventType.MouseDown)
+		//{
+		//	selected = true;
+		//}
+
+		//// 绘制条目底色
+		//EditorGUI.DrawRect(pos, bg_color);
+		//GUI.Label(pos, content);
+
+		//return selected;
+	}
+
+	// 绘制条目列表
+	public static void GUIOptionalList(ref Vector2 scroll_pos, ref int selected, System.Func<int, string> getter, params GUILayoutOption[] options)
+	{
+		var hs = GUI.skin.verticalScrollbar; // 禁用水平滚动条
+		scroll_pos = EditorGUILayout.BeginScrollView(scroll_pos, GUIStyle.none, hs, options);
+
+		int i = 0;
+		for (string str = getter(i); str != null && i < 255; str = getter(++i))
+		{
+			if (MiscUtils.GUIOptional(i == selected, str))
+				selected = i;
+		}
+
+		// 列表为空时, 绘制占位符None
+		if (i == 0)
+		{
+			MiscUtils.GUIOptional(true, "None");
+		}
+
+		EditorGUILayout.EndScrollView();
+	}
+
 #endif
 }
 

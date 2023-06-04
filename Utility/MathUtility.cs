@@ -35,6 +35,11 @@ public static class MathUtility
 	public static Vector2 SetValue(Vector2 basic, float? x = null, float? y = null)
 		=> SetValue(basic, x, y);
 
+	public static Vector3 ToVec3(this Vector2 basic, float z)
+	{
+		return new Vector3(basic.x, basic.y, z);
+	}
+
 	public static int VaildIndex(int index, int length)
 	{
 		index %= length;
@@ -352,6 +357,54 @@ public static class MathUtility
 	{
 		return 1.0f / Mathf.Tan(x);
 	}
+
+	public static int GetMaxMin(out float max, out float min, IEnumerable<float> values)
+	{
+		max = float.NegativeInfinity;
+		min = float.PositiveInfinity;
+
+		int count = 0;
+		foreach (var v in values)
+		{
+			max = Mathf.Max(max, v);
+			min = Mathf.Min(min, v);
+
+			count++;
+		}
+		return count;
+	}
+
+	public static int GetMaxMin(out Vector2 max, out Vector2 min, IEnumerable<Vector2> values)
+	{
+		max = Vector2.negativeInfinity;
+		min = Vector2.positiveInfinity;
+
+		int count = 0;
+		foreach (var v in values)
+		{
+			max = Vector2.Max(max, v);
+			min = Vector2.Min(min, v);
+
+			count++;
+		}
+		return count;
+	}
+	public static int GetMaxMin(out Vector3 max, out Vector3 min, IEnumerable<Vector3> values)
+	{
+		max = Vector3.negativeInfinity;
+		min = Vector3.positiveInfinity;
+
+		int count = 0;
+		foreach (var v in values)
+		{
+			max = Vector3.Max(max, v);
+			min = Vector3.Min(min, v);
+
+			count++;
+		}
+		return count;
+	}
+
 }
 
 /*
