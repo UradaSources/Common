@@ -218,6 +218,16 @@ public static class MiscUtils
 		return str;
 	}
 
+	public static IEnumerable<float> SampleValue(int sample, float v)
+	{
+		sample = Mathf.Max(sample, 1);
+		for (int i = 0; i < sample; i++)
+		{
+			float r = i / (sample - 1);
+			yield return v * r;
+		}
+	}
+
 	// 过渡到正交视图
 	public static IEnumerator CameraToOrthViewProcess(Camera camera, float duration, float focusDist, float fovTarget = 1)
 	{
