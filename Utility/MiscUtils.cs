@@ -354,7 +354,7 @@ public static class MiscUtils
 
 	// 按顺序获取被选中的任意对象, 必须继承自UnityEngine.Object
 	// 使用过滤器进行过滤
-	public static IEnumerable<T> GetSelectedByOrder<T>(System.Func<T, bool> filter = null)
+	public static IEnumerable<T> GetSelectedObjectByOrder<T>(System.Func<T, bool> filter = null)
 		where T : UnityEngine.Object
 	{
 		var selected = Selection.objects;
@@ -548,7 +548,8 @@ public static class MiscUtils
 		}
 
 		EditorGUILayout.EndScrollView();
-	}#endif
+	}
+#endif
 }
 
 //public static int GetSelected<T>(ref List<T> results)

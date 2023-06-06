@@ -95,7 +95,7 @@ public class SpriteAnimator : MonoBehaviour
 	{
 		get
 		{
-			if (m_anim && m_anim.TryGetKeyframe(m_curKeyframeIndex, out var kf))
+			if (m_anim != null && m_anim.TryGetKeyframe(m_curKeyframeIndex, out var kf))
 				return kf;
 			return null;
 		}
@@ -210,7 +210,7 @@ public class SpriteAnimator : MonoBehaviour
 
 	private void Update()
 	{
-		if (this.State == PlayState.Play && m_anim && m_anim.TryGetKeyframe(0, out _))
+		if (this.State == PlayState.Play && m_anim != null && m_anim.TryGetKeyframe(0, out _))
 		{
 			this.UpdateFrame(Time.deltaTime);
 		}
@@ -219,10 +219,8 @@ public class SpriteAnimator : MonoBehaviour
 #if UNITY_EDITOR
 	public void CreateAnimFromSelectedSprites()
 	{
-		var tmp = new List<Sprite>();
-		MiscUtils.GetSelectedObjectByOrder(ref tmp);
-
-		var asset = KeyframeSequence.CreateFromeSprites(tmp, 24);
+		var sps = MiscUtils.GetSelectedObjectByOrder<Sprite>();
+		var asset = KeyframeSequence.CreateFromeSprites(sps, 24);
 
 		var path = UnityEditor.EditorUtility.SaveFilePanelInProject("Create", "new sequence", "asset", "");
 		if (!string.IsNullOrEmpty(path))
@@ -234,6 +232,14 @@ public class SpriteAnimator : MonoBehaviour
 	private void Reset()
 	{
 		m_renderer = this.GetComponent<SpriteRenderer>();
+	}
+
+	private void OnValidate()
+	{
+		if (m_anim != null && m_anim.TryGetKeyframe(0, out var kf))
+			m_renderer.sprite = kf.sprite;
+		else
+			m_renderer.sprite = null;
 	}
 #endif
 }
