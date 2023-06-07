@@ -220,11 +220,15 @@ public static class MiscUtils
 
 	public static IEnumerable<float> SampleValue(int sample, float v)
 	{
-		sample = Mathf.Max(sample, 1);
-		for (int i = 0; i < sample; i++)
-		{
-			float r = i / (sample - 1);
-			yield return v * r;
+		if (sample < 2)
+			yield return 0;
+		else
+		{ 
+			for (int i = 0; i < sample; i++)
+			{
+				float r = (float)i / (sample - 1);
+				yield return v * r;
+			}
 		}
 	}
 
@@ -387,11 +391,9 @@ public static class MiscUtils
 		}
 	}
 
-	public static float GizmoScale(Vector3 position, Camera camera = null)
+	public static float GizmoScale(Vector3 position, Camera camera)
 	{
-		camera = camera ?? Camera.current;
 		position = Gizmos.matrix.MultiplyPoint(position);
-
 		if (camera)
 		{
 			Transform transform = camera.transform;
@@ -405,6 +407,8 @@ public static class MiscUtils
 
 		return 20f;
 	}
+	public static float EditorGizmoScale(Vector3 position)
+		=> GizmoScale(position, SceneView.lastActiveSceneView.camera);
 
 	// 编辑器快速操作
 	// 不可用, 待修复
@@ -433,7 +437,7 @@ public static class MiscUtils
 
 	// 编辑器快速操作
 	// 首先在选中的所有对象中计算ymin和ymax, 再进行均匀分布
-	[MenuItem("MiscUtils/Spacing YAxis")]
+	[MenuItem("MiscUtils/Spacing y axis")]
 	public static void SpacingYAxis()
 	{
 		var itor = MiscUtils.GetSelectedComponentsByOrder<Transform>();
@@ -462,6 +466,23 @@ public static class MiscUtils
 			pos.y = yDelta * i + yMin;
 
 			result[i].transform.localPosition = pos;
+		}
+	}
+
+	// 朝向编辑器视图
+	[MenuItem("MiscUtils/Towards editor view")]
+	public static void TowardsEditorView()
+	{
+		var itor = MiscUtils.GetSelectedComponentsByOrder<Transform>();
+		var trs = new List<Transform>(itor);
+
+		Undo.RecordObjects(trs.ToArray(), "Spacing Spacing YAxis");
+
+		var camera = SceneView.lastActiveSceneView.camera;
+		foreach (var tr in trs)
+		{
+			var dir = (camera.transform.position - tr.position).normalized;
+			tr.forward = dir;
 		}
 	}
 #endif

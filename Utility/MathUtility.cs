@@ -116,6 +116,9 @@ public static class MathUtility
 		return i % length;
 	}
 
+	public static int ClampIndex(int i, int length)
+		=> Mathf.Clamp(i, 0, length - 1);
+
 	static public float MapToRange(float rate, float max, float min)
 	{
 		return rate * (max - min) + min;
