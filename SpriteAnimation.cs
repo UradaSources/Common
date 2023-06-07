@@ -2,10 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "new KeyframeSequence", menuName = "KeyframeSequence")]
-public class KeyframeSequence : ScriptableObject
+[CreateAssetMenu(fileName = "new SpriteAnimation", menuName = "SpriteAnimation")]
+public class SpriteAnimation : ScriptableObject
 {
-	[System.Serializable] 
+	[System.Serializable]
 	public struct Keyframe
 	{
 		public Sprite sprite;
@@ -22,16 +22,16 @@ public class KeyframeSequence : ScriptableObject
 		}
 	}
 
-	public static KeyframeSequence CreateFromeSprites(IEnumerable<Sprite> sp, int sample, int unitFrameLength = 1)
+	public static SpriteAnimation CreateFromeSprites(IEnumerable<Sprite> sp, int sample, int unitFrameLength = 1)
 	{ 
-		var asset = ScriptableObject.CreateInstance<KeyframeSequence>();
+		var asset = ScriptableObject.CreateInstance<SpriteAnimation>();
 		asset.Sample = sample;
 		asset.SetKeyframe(sp.Process((Sprite sp)=>new Keyframe(sp, unitFrameLength)));
 
 		return asset;
 	}
 
-	public static implicit operator bool(KeyframeSequence obj) => obj == null;
+	public static implicit operator bool(SpriteAnimation obj) => obj == null;
 
 	[SerializeField] 
 	private Keyframe[] m_keyframes;

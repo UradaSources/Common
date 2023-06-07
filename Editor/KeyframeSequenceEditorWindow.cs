@@ -14,7 +14,7 @@ public class SpriteFrameExpandEditorWindow : EditorWindow
 	}
 
 	[SerializeField]
-	private KeyframeSequence m_target;
+	private SpriteAnimation m_target;
 
 	private Vector2 m_scroll_pos;
 	private int m_selected_index;
@@ -36,7 +36,7 @@ public class SpriteFrameExpandEditorWindow : EditorWindow
 
 	public float delta_time => _delta_time;
 
-	public KeyframeSequence.Keyframe? current_preview_keyframe
+	public SpriteAnimation.Keyframe? current_preview_keyframe
 	{
 		get
 		{
@@ -53,7 +53,7 @@ public class SpriteFrameExpandEditorWindow : EditorWindow
 	{
 		EditorGUILayout.BeginHorizontal();
 
-		var rt = EditorGUILayout.ObjectField("Assets", m_target, typeof(KeyframeSequence), false) as KeyframeSequence;
+		var rt = EditorGUILayout.ObjectField("Assets", m_target, typeof(SpriteAnimation), false) as SpriteAnimation;
 		//if (GUILayout.Button("Create In Unity Assets"))
 		//{
 		//	var dir = EditorUtility.SaveFilePanelInProject("Create New KeyframeSequence", "New KeyframeSequence", "asset", "");

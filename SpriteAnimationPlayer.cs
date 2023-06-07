@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Events;
 
 [RequireComponent(typeof(SpriteRenderer)), DisallowMultipleComponent]
-public class SpriteAnimator : MonoBehaviour
+public class SpriteAnimationPlayer : MonoBehaviour
 {
 	public enum PlayState
 	{
@@ -14,7 +14,7 @@ public class SpriteAnimator : MonoBehaviour
 		Finish
 	}
 
-	public class StateChangedEvent : UnityEvent<SpriteAnimator, PlayState> { };
+	public class StateChangedEvent : UnityEvent<SpriteAnimationPlayer, PlayState> { };
 	public StateChangedEvent onStartChanged = new StateChangedEvent();
 
 	// 所使用的的精灵渲染器
@@ -22,7 +22,7 @@ public class SpriteAnimator : MonoBehaviour
 	private SpriteRenderer m_renderer;
 
 	[SerializeField]
-	private KeyframeSequence m_anim; // 当前动画
+	private SpriteAnimation m_anim; // 当前动画
 
 	[SerializeField]
 	private bool m_playOnAwake = true;
@@ -40,7 +40,7 @@ public class SpriteAnimator : MonoBehaviour
 
 	private PlayState _state = PlayState.Prepare;
 
-	public KeyframeSequence Anim
+	public SpriteAnimation Anim
 	{
 		set => m_anim = value;
 		get => m_anim;
@@ -91,7 +91,7 @@ public class SpriteAnimator : MonoBehaviour
 		get => m_frameCounter;
 	}
 
-	public KeyframeSequence.Keyframe? CurKeyframe
+	public SpriteAnimation.Keyframe? CurKeyframe
 	{
 		get
 		{
@@ -128,10 +128,8 @@ public class SpriteAnimator : MonoBehaviour
 		m_timer = 0;
 
 		// 设置当前所使用的精灵
-		if (this.Anim && this.Anim.TryGetKeyframe(0, out var kf))
-		{
+		if (m_anim != null && m_anim.TryGetKeyframe(0, out var kf))
 			m_renderer.sprite = kf.sprite;
-		}
 
 		this.State = PlayState.Prepare;
 	}
@@ -220,7 +218,7 @@ public class SpriteAnimator : MonoBehaviour
 	public void CreateAnimFromSelectedSprites()
 	{
 		var sps = MiscUtils.GetSelectedObjectByOrder<Sprite>();
-		var asset = KeyframeSequence.CreateFromeSprites(sps, 24);
+		var asset = SpriteAnimation.CreateFromeSprites(sps, 24);
 
 		var path = UnityEditor.EditorUtility.SaveFilePanelInProject("Create", "new sequence", "asset", "");
 		if (!string.IsNullOrEmpty(path))
