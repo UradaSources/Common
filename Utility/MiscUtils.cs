@@ -218,6 +218,20 @@ public static class MiscUtils
 		return str;
 	}
 
+	public static IEnumerable<float> SampleValue(int sample, float v)
+	{
+		if (sample < 2)
+			yield return 0;
+		else
+		{ 
+			for (int i = 0; i < sample; i++)
+			{
+				float r = (float)i / (sample - 1);
+				yield return v * r;
+			}
+		}
+	}
+
 	// 过渡到正交视图
 	public static IEnumerator CameraToOrthViewProcess(Camera camera, float duration, float focusDist, float fovTarget = 1)
 	{
@@ -377,11 +391,9 @@ public static class MiscUtils
 		}
 	}
 
-	public static float GizmoScale(Vector3 position, Camera camera = null)
+	public static float GizmoScale(Vector3 position, Camera camera)
 	{
-		camera = camera ?? Camera.current;
 		position = Gizmos.matrix.MultiplyPoint(position);
-
 		if (camera)
 		{
 			Transform transform = camera.transform;
@@ -395,6 +407,8 @@ public static class MiscUtils
 
 		return 20f;
 	}
+	public static float EditorGizmoScale(Vector3 position)
+		=> GizmoScale(position, SceneView.lastActiveSceneView.camera);
 
 	// 编辑器快速操作
 	// 不可用, 待修复
@@ -423,7 +437,7 @@ public static class MiscUtils
 
 	// 编辑器快速操作
 	// 首先在选中的所有对象中计算ymin和ymax, 再进行均匀分布
-	[MenuItem("MiscUtils/Spacing YAxis")]
+	[MenuItem("MiscUtils/Spacing y axis")]
 	public static void SpacingYAxis()
 	{
 		var itor = MiscUtils.GetSelectedComponentsByOrder<Transform>();
@@ -454,8 +468,7 @@ public static class MiscUtils
 			result[i].transform.localPosition = pos;
 		}
 	}
-
-	// 绘制纹理
+// 绘制纹理
 	public static void GUIDrawTexture(Sprite sprite, float height, float? x_offset = null)
 	{
 		var rect = EditorGUILayout.GetControlRect(false, height);
@@ -548,6 +561,21 @@ public static class MiscUtils
 		}
 
 		EditorGUILayout.EndScrollView();
+	}	// 朝向编辑器视图
+	[MenuItem("MiscUtils/Towards editor view")]
+	public static void TowardsEditorView()
+	{
+		var itor = MiscUtils.GetSelectedComponentsByOrder<Transform>();
+		var trs = new List<Transform>(itor);
+
+		Undo.RecordObjects(trs.ToArray(), "Spacing Spacing YAxis");
+
+		var camera = SceneView.lastActiveSceneView.camera;
+		foreach (var tr in trs)
+		{
+			var dir = (camera.transform.position - tr.position).normalized;
+			tr.forward = dir;
+		}
 	}
 #endif
 }
