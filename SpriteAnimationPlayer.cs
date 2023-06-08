@@ -185,7 +185,7 @@ public class SpriteAnimationPlayer : MonoBehaviour
 					// 剔除关键帧残留的帧数
 					m_frameCounter -= keyframe.length;
 					// 递进关键帧
-					m_curKeyframeIndex = MathUtility.LoopIndex(m_curKeyframeIndex, m_anim.KeyframeCount, dir);
+					m_curKeyframeIndex = MathUtils.LoopIndex(m_curKeyframeIndex, m_anim.KeyframeCount, dir);
 				}
 			}
 

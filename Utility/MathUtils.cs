@@ -1,10 +1,8 @@
-/*urada 2023/5/29*/
-#define MATH_UTILITY_DEFINED
 using System.Collections.Generic;
 using System.Collections;
 using UnityEngine;
 
-public static class MathUtility
+public static class MathUtils
 {
 	public static Vector3 SetValue(this ref Vector3 basic, float? x = null, float? y = null, float? z = null)
 	{
@@ -300,7 +298,7 @@ public static class MathUtility
 			for (int j = 0; j < unitSimple; j++)
 			{
 				float t = ((float)j) / (unitSimple - 1);
-				var tmp = MathUtility.BezierCurve(ins1, cur, ins2, t);
+				var tmp = MathUtils.BezierCurve(ins1, cur, ins2, t);
 
 				// 拐角曲线的采样点
 				dst.Add(tmp);

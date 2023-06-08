@@ -195,7 +195,7 @@ public class SpriteFrameExpandEditorWindow : EditorWindow
 				// 剔除关键帧残留的帧数
 				m_player_frame_counter -= keyframe.length;
 				// 递进关键帧
-				m_player_keyframe_index = MathUtility.LoopIndex(m_player_keyframe_index, m_target.KeyframeCount);
+				m_player_keyframe_index = MathUtils.LoopIndex(m_player_keyframe_index, m_target.KeyframeCount);
 
 				this.Repaint();
 			}

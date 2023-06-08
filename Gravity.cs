@@ -57,9 +57,9 @@ public class Gravity : MonoBehaviour
 			// 显示范围内所有受影响的对象
 			if (showAllAffectedObject)
 			{
-				DebugUtility.DrawMark(rb.position, new DrawParam(color: Color.blue));
-				DebugUtility.DrawArrow(rb.position, force * dir * Time.fixedDeltaTime, new DrawParam(color: Color.gray));
-				DebugUtility.DrawArrow(rb.position, rb.velocity * Time.fixedDeltaTime, new DrawParam(color: Color.red));
+				DebugUtils.DrawMark(rb.position, new DrawParam(color: Color.blue));
+				DebugUtils.DrawArrow(rb.position, force * dir * Time.fixedDeltaTime, new DrawParam(color: Color.gray));
+				DebugUtils.DrawArrow(rb.position, rb.velocity * Time.fixedDeltaTime, new DrawParam(color: Color.red));
 			}
 #endif
 		}
@@ -92,8 +92,8 @@ public class Gravity : MonoBehaviour
 		// 在边缘点与中心点之间绘制重力系数曲线
 		var sidePoint = this.Center + Vector2.one * m_trigger.radius;
 
-		DebugUtility.DrawRange(this.Center, sidePoint);
-		DebugUtility.DrawNormalizedCurveTo((float t) => m_forceCurve.Evaluate(1-t), 24, sidePoint, this.Center);
+		DebugUtils.DrawRange(this.Center, sidePoint);
+		DebugUtils.DrawNormalizedCurveTo((float t) => m_forceCurve.Evaluate(1-t), 24, sidePoint, this.Center);
 	}
 #endif
 }

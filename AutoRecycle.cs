@@ -61,7 +61,7 @@ public class AutoRecycle : MonoBehaviour
 		{
 			var pos = (Vector2)this.transform.position;
 
-			bool flag = MathUtility.InRange(pos, m_rangeMin, m_rangeMax);
+			bool flag = MathUtils.InRange(pos, m_rangeMin, m_rangeMax);
 			if (m_reverse) flag = !flag;
 
 			if (flag) this.Recycle();
@@ -78,7 +78,7 @@ public class AutoRecycle : MonoBehaviour
 	private void OnDrawGizmosSelected()
 	{
 		if (m_useRectRange)
-			DebugUtility.DrawRange(m_rangeMin, m_rangeMax);
+			DebugUtils.DrawRange(m_rangeMin, m_rangeMax);
 	}
 #endif
 }

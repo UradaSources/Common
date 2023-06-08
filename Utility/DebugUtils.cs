@@ -1,12 +1,7 @@
-/*urada 2023/5/29*/
-
-#define DEBUG_UTILITY_DEFINED
-
 using System.Collections.Generic;
 using System.Collections;
-using UnityEngine;
-
 using System.Diagnostics;
+using UnityEngine;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -36,7 +31,7 @@ public struct DrawParam
 	}
 }
 
-public static class DebugUtility
+public static class DebugUtils
 {
 	[Conditional("UNITY_EDITOR")]
 	public static void DrawMark(Vector3 pos, DrawParam? args = null)
@@ -51,9 +46,9 @@ public static class DebugUtility
 		Vector3 yOffset = param.size * 0.5f * Vector3.up;
 		Vector3 zOffset = param.size * 0.5f * Vector3.forward;
 
-		DebugUtility.DrawLine(pos - xOffset, pos + xOffset, args);
-		DebugUtility.DrawLine(pos - yOffset, pos + yOffset, args);
-		DebugUtility.DrawLine(pos - zOffset, pos + zOffset, args);
+		DebugUtils.DrawLine(pos - xOffset, pos + xOffset, args);
+		DebugUtils.DrawLine(pos - yOffset, pos + yOffset, args);
+		DebugUtils.DrawLine(pos - zOffset, pos + zOffset, args);
 	}
 
 	[Conditional("UNITY_EDITOR")]
@@ -63,7 +58,7 @@ public static class DebugUtility
 
 		var param = args ?? DrawParam.Default;
 
-		DebugUtility.DrawRay(pos, vec, args);
+		DebugUtils.DrawRay(pos, vec, args);
 
 		var left = (vec * -1).normalized;
 		var right = (vec * -1).normalized;
@@ -74,15 +69,15 @@ public static class DebugUtility
 		var scale = MiscUtils.EditorGizmoScale(pos);
 		param.size *= scale;
 
-		DebugUtility.DrawRay(pos + vec, left * param.size, args);
-		DebugUtility.DrawRay(pos + vec, right * param.size, args);
+		DebugUtils.DrawRay(pos + vec, left * param.size, args);
+		DebugUtils.DrawRay(pos + vec, right * param.size, args);
 	}
 
 	[Conditional("UNITY_EDITOR")]
 	public static void DrawArrowBetween(Vector3 start, Vector3 target, DrawParam? args = null)
 	{
 		var vec = target - start;
-		DebugUtility.DrawArrow(start, vec, args);
+		DebugUtils.DrawArrow(start, vec, args);
 	}
 
 	[Conditional("UNITY_EDITOR")]
@@ -110,7 +105,7 @@ public static class DebugUtility
 		foreach (var cur in points)
 		{
 			if (markPoint)
-				DebugUtility.DrawMark(cur, args);
+				DebugUtils.DrawMark(cur, args);
 
 			if (!recordFirst)
 			{
@@ -118,13 +113,13 @@ public static class DebugUtility
 				recordFirst = true;
 			}
 			else
-				DebugUtility.DrawLine(previous, cur, args);
+				DebugUtils.DrawLine(previous, cur, args);
 			
 			previous = cur;
 		}
 
 		if (isClosed)
-			DebugUtility.DrawLine(previous, first, args);
+			DebugUtils.DrawLine(previous, first, args);
 	}
 
 	[Conditional("UNITY_EDITOR")]
@@ -147,10 +142,10 @@ public static class DebugUtility
 			p4 = q * p4;
 		}
 
-		DebugUtility.DrawLine(p1, p2, args);
-		DebugUtility.DrawLine(p2, p3, args);
-		DebugUtility.DrawLine(p3, p4, args);
-		DebugUtility.DrawLine(p4, p1, args);
+		DebugUtils.DrawLine(p1, p2, args);
+		DebugUtils.DrawLine(p2, p3, args);
+		DebugUtils.DrawLine(p3, p4, args);
+		DebugUtils.DrawLine(p4, p1, args);
 	}
 
 	[Conditional("UNITY_EDITOR")]
@@ -182,9 +177,9 @@ public static class DebugUtility
 			if (i == 0)
 				first = cur; // 记录第一个采样点
 			else if (i == sample) // 最后一次绘制时连接最后一个采样点与第一个采样点
-				DebugUtility.DrawLine(first, previous, args);
+				DebugUtils.DrawLine(first, previous, args);
 			else
-				DebugUtility.DrawLine(previous, cur, args);
+				DebugUtils.DrawLine(previous, cur, args);
 
 			previous = cur;
 		}
@@ -195,10 +190,10 @@ public static class DebugUtility
 	{
 		var castPos = pos + dir.normalized * dist;
 
-		DebugUtility.DrawBox(pos, size, angle, args); // 起始碰撞盒
-		DebugUtility.DrawBox(castPos, size, angle, args); // 目标碰撞盒
+		DebugUtils.DrawBox(pos, size, angle, args); // 起始碰撞盒
+		DebugUtils.DrawBox(castPos, size, angle, args); // 目标碰撞盒
 
-		DebugUtility.DrawArrow(pos, castPos, args);
+		DebugUtils.DrawArrow(pos, castPos, args);
 	}
 
 	[Conditional("UNITY_EDITOR")]
@@ -217,9 +212,9 @@ public static class DebugUtility
 				first = cur; // 记录第一个采样点
 			else if (i == sample && isClosed)
 				// 如果是封闭曲线, 连接末尾点到起点
-				DebugUtility.DrawLine(previous, first, args);
+				DebugUtils.DrawLine(previous, first, args);
 			else
-				DebugUtility.DrawLine(previous, cur, args);
+				DebugUtils.DrawLine(previous, cur, args);
 
 			previous = cur;
 		}
@@ -246,9 +241,9 @@ public static class DebugUtility
 				first = cur; // 记录第一个采样点
 			else if (i == sample && isClosed)
 				// 如果是封闭曲线, 连接末尾点到起点
-				DebugUtility.DrawLine(previous, first, args);
+				DebugUtils.DrawLine(previous, first, args);
 			else
-				DebugUtility.DrawLine(previous, cur, args);
+				DebugUtils.DrawLine(previous, cur, args);
 
 			previous = cur;
 		}

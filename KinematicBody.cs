@@ -117,8 +117,6 @@ public class KinematicBody : MonoBehaviour
 		get => m_box.offset * this.transform.localScale;
 	}
 
-	// public CollisionFliter Fliter { set; get; }
-
 	public float GravityScale
 	{
 		set => m_gravityScale = value;
@@ -134,19 +132,19 @@ public class KinematicBody : MonoBehaviour
 	// 储存命中信息的缓冲区
 	private List<RaycastHit2D> m_hitButter = new List<RaycastHit2D>();
 
-	public void SnapEdge(Vector2 side, float pos, float space = MinSpace)
+	public void SnapEdge(Vector2 side, Vector2 pos, float space = MinSpace)
 	{
 		if (side.x != 0)
 		{
 			// 使用碰撞盒中心计算对齐后的坐标并应用
 			var half = this.Size.x * 0.5f + space;
-			this.Centre = new Vector2(pos - side.x * half, this.Centre.y);
+			this.Centre = new Vector2(pos.x - side.x * half, this.Centre.y);
 		}
-		else if (side.y != 0)
+		if (side.y != 0)
 		{
 			// 使用碰撞盒中心计算对齐后的坐标并应用
 			var half = this.Size.y * 0.5f + space;
-			this.Centre = new Vector2(this.Centre.x, pos - side.y * half);
+			this.Centre = new Vector2(this.Centre.x, pos.y - side.y * half);
 		}
 	}
 
@@ -184,40 +182,40 @@ public class KinematicBody : MonoBehaviour
 		// var info = new CollidedInfo();
 		if (!Mathf.Approximately(delta.x, 0))
 		{
-			var dir = MathUtility.SignInt(delta.x);
+			var dir = MathUtils.SignInt(delta.x);
 			var side = new Vector2(dir, 0);
 
 			var hit = this.CollisionTest(side, Mathf.Abs(delta.x));
 			if (hit.collider)
 			{
 				// 将边贴合到撞击点
-				this.SnapEdge(side, hit.point.x);
+				this.SnapEdge(side, hit.point);
 
 				// 钳制速度
-				if (MathUtility.SignInt(this.Velocity.x) == side.x)
+				if (MathUtils.SignInt(this.Velocity.x) == side.x)
 					this.Velocity = new Vector2(0, this.Velocity.y);
 
-				DebugUtility.DrawArrowBetween(this.Position, hit.point);
+				DebugUtils.DrawArrowBetween(this.Position, hit.point);
 			}
 
 			// 更新碰撞信息
 		}
 		if (!Mathf.Approximately(delta.y, 0))
 		{
-			var dir = MathUtility.SignInt(delta.y);
+			var dir = MathUtils.SignInt(delta.y);
 			var side = new Vector2(0, dir);
 
 			var hit = this.CollisionTest(side, Mathf.Abs(delta.y));
 			if (hit.collider)
 			{
 				// 将边贴合到撞击点
-				this.SnapEdge(side, hit.point.y);
+				this.SnapEdge(side, hit.point);
 
 				// 钳制速度
-				if (MathUtility.SignInt(this.Velocity.y) == side.y)
+				if (MathUtils.SignInt(this.Velocity.y) == side.y)
 					this.Velocity = new Vector2(this.Velocity.x, 0);
 
-				DebugUtility.DrawArrowBetween(this.Position, hit.point);
+				DebugUtils.DrawArrowBetween(this.Position, hit.point);
 			}
 
 			// 更新碰撞信息

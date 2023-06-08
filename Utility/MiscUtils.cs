@@ -1,4 +1,3 @@
-/*urada 2023/5/29*/
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,7 +6,6 @@ using UnityEngine;
 using UnityEditor;
 #endif
 
-// 一些迭代器拓展方法可能和system.linq中的重复
 public static class MiscUtils
 {
 	public static Color ClearAlpha { get => new Color(1, 1, 1, 0); }
@@ -135,7 +133,7 @@ public static class MiscUtils
 		for (int i = 0; i < sample; i++)
 		{
 			var r = ((float)i / sample - 1) * Mathf.PI * 2.0f;
-			var point = offset + (Vector3)MathUtility.Circle(radius, r);
+			var point = offset + (Vector3)MathUtils.Circle(radius, r);
 
 			points[i] = point;
 		}
@@ -261,7 +259,7 @@ public static class MiscUtils
 
 			// 根据fov来更新目标到摄像机的距离
 			// 随着fov越来越小, dist将越来越大来保持size不变
-			var dist = MathUtility.Cot(camera.fieldOfView * 0.5f * Mathf.Deg2Rad) * size;
+			var dist = MathUtils.Cot(camera.fieldOfView * 0.5f * Mathf.Deg2Rad) * size;
 
 			// 更新摄像机的位置
 			var pos = focusPoint - camTr.forward * dist;
@@ -304,7 +302,7 @@ public static class MiscUtils
 		var focusPoint = camTr.position + camTr.forward * focusDist;
 
 		// 初始化, 将相机移动到足够远的距离后设置为正交视角, 再逐渐拉近到正常位置
-		var startDist = MathUtility.Cot(halfFovAngle) * size;
+		var startDist = MathUtils.Cot(halfFovAngle) * size;
 
 		var startPos = focusPoint - camTr.forward * startDist;
 		camTr.position = startPos;
@@ -320,7 +318,7 @@ public static class MiscUtils
 
 			// 根据fov来更新目标到摄像机的距离
 			// 随着fov越来越大, dist将越来越小来保持size不变
-			var dist = MathUtility.Cot(camera.fieldOfView * 0.5f * Mathf.Deg2Rad) * size;
+			var dist = MathUtils.Cot(camera.fieldOfView * 0.5f * Mathf.Deg2Rad) * size;
 
 			// 更新摄像机的位置
 			var pos = focusPoint - camTr.forward * dist;
@@ -405,66 +403,8 @@ public static class MiscUtils
 	}
 	public static float EditorGizmoScale(Vector3 position)
 		=> GizmoScale(position, SceneView.lastActiveSceneView.camera);
-
-	// 编辑器快速操作
-	// 不可用, 待修复
-	// 对当前选中的在编辑器中的GameObject的子对象进行反向排序
-	// [MenuItem("MiscUtils/Reverse Selected GameObjects Child")]
-	private static void ReverseSelectedChild()
-	{
-		var itor = MiscUtils.GetSelectedComponentsByOrder<Transform>();
-		var result = new List<Transform>(itor);
-
-		// 储存位置方便撤销
-		List<Transform> childs = new List<Transform>();
-		foreach (var tr in result)
-		{
-			foreach (Transform child in tr)
-				childs.Add(child);
-		}
-		Undo.RecordObjects(childs.ToArray(), "Spacing Spacing YAxis");
-
-		foreach (var tr in result)
-		{
-			for (int i = 0; i < tr.childCount; i++)
-				tr.GetChild(0).SetAsLastSibling();
-		}
-	}
-
-	// 编辑器快速操作
-	// 首先在选中的所有对象中计算ymin和ymax, 再进行均匀分布
-	[MenuItem("MiscUtils/Spacing y axis")]
-	public static void SpacingYAxis()
-	{
-		var itor = MiscUtils.GetSelectedComponentsByOrder<Transform>();
-		var result = new List<Transform>(itor);
-
-		if (result.Count <= 1) return;
-
-		// 储存位置方便撤销
-		Undo.RecordObjects(result.ToArray(), "Spacing Spacing YAxis");
-
-		float yMax = float.MinValue;
-		float yMin = float.MaxValue;
-
-		foreach (var i in result)
-		{
-			var pos = i.transform.localPosition;
-			yMax = Mathf.Max(pos.y, yMax);
-			yMin = Mathf.Min(pos.y, yMin);
-		}
-
-		var yDelta = (yMax - yMin) / (result.Count - 1);
-
-		for (int i = 0; i < result.Count; i++)
-		{
-			var pos = result[i].transform.localPosition;
-			pos.y = yDelta * i + yMin;
-
-			result[i].transform.localPosition = pos;
-		}
-	}
-// 绘制纹理
+	
+	// 绘制纹理
 	public static void GUIDrawTexture(Sprite sprite, float height, float? x_offset = null)
 	{
 		var rect = EditorGUILayout.GetControlRect(false, height);
@@ -557,7 +497,9 @@ public static class MiscUtils
 		}
 
 		EditorGUILayout.EndScrollView();
-	}	// 朝向编辑器视图
+	}	
+	
+	// 朝向编辑器视图
 	[MenuItem("MiscUtils/Towards editor view")]
 	public static void TowardsEditorView()
 	{
@@ -571,6 +513,65 @@ public static class MiscUtils
 		{
 			var dir = (camera.transform.position - tr.position).normalized;
 			tr.forward = dir;
+		}
+	}
+
+	// 编辑器快速操作
+	// 不可用, 待修复
+	// 对当前选中的在编辑器中的GameObject的子对象进行反向排序
+	// [MenuItem("MiscUtils/Reverse Selected GameObjects Child")]
+	private static void ReverseSelectedChild()
+	{
+		var itor = MiscUtils.GetSelectedComponentsByOrder<Transform>();
+		var result = new List<Transform>(itor);
+
+		// 储存位置方便撤销
+		List<Transform> childs = new List<Transform>();
+		foreach (var tr in result)
+		{
+			foreach (Transform child in tr)
+				childs.Add(child);
+		}
+		Undo.RecordObjects(childs.ToArray(), "Spacing Spacing YAxis");
+
+		foreach (var tr in result)
+		{
+			for (int i = 0; i < tr.childCount; i++)
+				tr.GetChild(0).SetAsLastSibling();
+		}
+	}
+
+	// 编辑器快速操作
+	// 首先在选中的所有对象中计算ymin和ymax, 再进行均匀分布
+	[MenuItem("MiscUtils/Spacing y axis")]
+	public static void SpacingYAxis()
+	{
+		var itor = MiscUtils.GetSelectedComponentsByOrder<Transform>();
+		var result = new List<Transform>(itor);
+
+		if (result.Count <= 1) return;
+
+		// 储存位置方便撤销
+		Undo.RecordObjects(result.ToArray(), "Spacing Spacing YAxis");
+
+		float yMax = float.MinValue;
+		float yMin = float.MaxValue;
+
+		foreach (var i in result)
+		{
+			var pos = i.transform.localPosition;
+			yMax = Mathf.Max(pos.y, yMax);
+			yMin = Mathf.Min(pos.y, yMin);
+		}
+
+		var yDelta = (yMax - yMin) / (result.Count - 1);
+
+		for (int i = 0; i < result.Count; i++)
+		{
+			var pos = result[i].transform.localPosition;
+			pos.y = yDelta * i + yMin;
+
+			result[i].transform.localPosition = pos;
 		}
 	}
 #endif

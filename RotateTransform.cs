@@ -30,7 +30,7 @@ public class RotateTransform : MonoBehaviour
 			var angle = m_rb.rotation;
 
 			angle += m_speed * Time.deltaTime;
-			angle = MathUtility.Loop(angle, 360.0f);
+			angle = MathUtils.Loop(angle, 360.0f);
 
 			m_rb.MoveRotation(angle);
 		}
@@ -39,7 +39,7 @@ public class RotateTransform : MonoBehaviour
 			var angle = this.transform.localEulerAngles;
 
 			angle.z += m_speed * Time.deltaTime;
-			angle.z = MathUtility.Loop(angle.z, 360.0f);
+			angle.z = MathUtils.Loop(angle.z, 360.0f);
 
 			this.transform.localEulerAngles = angle;
 		}
