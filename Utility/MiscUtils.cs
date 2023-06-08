@@ -10,6 +10,8 @@ using UnityEditor;
 // 一些迭代器拓展方法可能和system.linq中的重复
 public static class MiscUtils
 {
+	public static Color ClearAlpha { get => new Color(1, 1, 1, 0); }
+
 	public static bool InLayer(this GameObject go, string layer)
 		=> InLayer(go, LayerMask.GetMask(layer));
 	public static bool InLayer(this GameObject go, LayerMask layermask)
@@ -84,12 +86,6 @@ public static class MiscUtils
 	{
 		foreach (var i in src)
 			yield return new Vector3(i.x, i.y, z);
-	}
-
-	public static IEnumerable<T1> Process<T1, T2>(this IEnumerable<T2> src, System.Func<T2, T1> export)
-	{
-		foreach (var i in src)
-			yield return export.Invoke(i);
 	}
 
 	public static string Connect(string space, params string[] args)
@@ -178,7 +174,7 @@ public static class MiscUtils
 		return (v & mask) != 0;
 	}
 
-	public static IEnumerable<T2> Process<T1, T2>(IEnumerable<T1> src, System.Func<T1, T2> handle)
+	public static IEnumerable<T2> Process<T1, T2>(this IEnumerable<T1> src, System.Func<T1, T2> handle)
 	{
 		foreach (var i in src)
 			yield return handle.Invoke(i);

@@ -13,16 +13,57 @@ public interface ICollisionFliter
 [DisallowMultipleComponent, RequireComponent(typeof(Rigidbody2D), typeof(BoxCollider2D)), DefaultExecutionOrder(1)]
 public class KinematicBody : MonoBehaviour
 {
-	public struct Collided
+	public enum Edge
+	{ 
+		Top		= 0b000,
+		Bottom	= 0b001,
+
+		Left	= 0b110,
+		Right	= 0b100
+	}
+
+	public struct CollidedInfo
 	{
-		// 碰撞方向
-		public int directX;
-		public int directY;
+		public enum CollisionDirect
+		{
+			None = 0,
+			Positive = 1,
+			Negative = -1
+		}
+
+		public static implicit operator bool(CollidedInfo info)
+			=> info.xDirect != CollisionDirect.None || info.yDirect != CollisionDirect.None;
+
+		public CollisionDirect xDirect;
+		public CollisionDirect yDirect;
 
 		public Collider2D xContact;
 		public Collider2D yContact;
 
+		public Vector2 velocity;
+		public Vector2 position;
 
+		public Collider2D RightContact
+		{
+			get => xDirect == CollisionDirect.Positive ? 
+				xContact : null;
+		}
+		public Collider2D LeftContact
+		{ 
+			get => xDirect == CollisionDirect.Negative ? 
+				xContact : null; 
+		}
+
+		public Collider2D TopContact
+		{
+			get => yDirect == CollisionDirect.Positive ?
+				yContact : null;
+		}
+		public Collider2D BottomContact
+		{
+			get => yDirect == CollisionDirect.Negative ? 
+				yContact : null;
+		}
 	}
 
 	public delegate bool CollisionFliter(Vector2Int side, RaycastHit2D hit);
@@ -32,6 +73,18 @@ public class KinematicBody : MonoBehaviour
 
 	// 最小爬坡角度
 	public const float MaxClimbAngle = 10.0f;
+
+	[SerializeField]
+	private Rigidbody2D m_rb;
+
+	[SerializeField]
+	private BoxCollider2D m_box;
+
+	[SerializeField]
+	private float m_gravityScale = 1.0f;
+
+	[SerializeField]
+	private LayerMask m_targetMask;
 
 	public Rigidbody2D Rb { get => m_rb; }
 	public BoxCollider2D Box { get => m_box; }
@@ -64,41 +117,7 @@ public class KinematicBody : MonoBehaviour
 		get => m_box.offset * this.transform.localScale;
 	}
 
-	public Vector2Int ContactDirect { private set; get; }
-
-	public CollisionFliter Fliter { set; get; }
-
-	public Collider2D horizontalContact { private set; get; }
-	public Collider2D verticalContact { private set; get; }
-
-	public Collider2D topContact
-	{
-		get => this.ContactDirect.y > 0 ? this.verticalContact : null;
-	}
-	public Collider2D bottomContact
-	{ 
-		get => this.ContactDirect.y < 0 ? this.verticalContact : null;
-	}
-
-	public Collider2D leftContact
-	{ 
-		 get => this.ContactDirect.x < 0 ? this.horizontalContact : null;
-	}
-	public Collider2D rightContact
-	{ 
-		get => this.ContactDirect.x > 0 ? this.horizontalContact : null;
-	}
-
-	// 所使用的的碰撞盒与运动学刚体
-	[SerializeField]
-	private Rigidbody2D m_rb;
-
-	[SerializeField]
-	private BoxCollider2D m_box;
-
-	[SerializeField] private float m_gravityScale = 1.0f;
-
-	[SerializeField] private LayerMask m_targetMask;
+	// public CollisionFliter Fliter { set; get; }
 
 	public float GravityScale
 	{
@@ -115,23 +134,23 @@ public class KinematicBody : MonoBehaviour
 	// 储存命中信息的缓冲区
 	private List<RaycastHit2D> m_hitButter = new List<RaycastHit2D>();
 
-	public void SnapEdgeToPoint(Vector2Int side, Vector2 point, float space = MinSpace)
+	public void SnapEdge(Vector2 side, float pos, float space = MinSpace)
 	{
 		if (side.x != 0)
 		{
 			// 使用碰撞盒中心计算对齐后的坐标并应用
 			var half = this.Size.x * 0.5f + space;
-			this.Centre = new Vector2(point.x - side.x * half, this.Centre.y);
+			this.Centre = new Vector2(pos - side.x * half, this.Centre.y);
 		}
-		if (side.y != 0)
+		else if (side.y != 0)
 		{
 			// 使用碰撞盒中心计算对齐后的坐标并应用
 			var half = this.Size.y * 0.5f + space;
-			this.Centre = new Vector2(this.Centre.x, point.y - side.y * half);
+			this.Centre = new Vector2(this.Centre.x, pos - side.y * half);
 		}
 	}
 
-	private RaycastHit2D CollisionTest(Vector2Int side, float delta = MinSpace)
+	private RaycastHit2D CollisionTest(Vector2 side, float delta = MinSpace)
 	{
 		delta = Mathf.Abs(delta);
 
@@ -154,53 +173,54 @@ public class KinematicBody : MonoBehaviour
 		// 进行可能的碰撞过滤
 		foreach (var candidateHit in m_hitButter)
 		{
-			if (this.Fliter == null || this.Fliter(side, candidateHit))
-				return candidateHit;
+			//if (this.Fliter == null || this.Fliter(side, candidateHit))
+			return candidateHit;
 		}
 		return default;
 	}
 
 	private void CollisionDetectionAndHandle(Vector2 delta)
 	{
+		// var info = new CollidedInfo();
 		if (!Mathf.Approximately(delta.x, 0))
 		{
 			var dir = MathUtility.SignInt(delta.x);
-			var side = new Vector2Int(dir, 0);
+			var side = new Vector2(dir, 0);
 
 			var hit = this.CollisionTest(side, Mathf.Abs(delta.x));
 			if (hit.collider)
 			{
 				// 将边贴合到撞击点
-				this.SnapEdgeToPoint(side, hit.point);
+				this.SnapEdge(side, hit.point.x);
 
 				// 钳制速度
 				if (MathUtility.SignInt(this.Velocity.x) == side.x)
 					this.Velocity = new Vector2(0, this.Velocity.y);
+
+				DebugUtility.DrawArrowBetween(this.Position, hit.point);
 			}
 
 			// 更新碰撞信息
-			this.horizontalContact = hit.collider;
-			this.ContactDirect.x = hit.collider ? dir : 0;
 		}
 		if (!Mathf.Approximately(delta.y, 0))
 		{
 			var dir = MathUtility.SignInt(delta.y);
-			var side = new Vector2Int(0, dir);
+			var side = new Vector2(0, dir);
 
 			var hit = this.CollisionTest(side, Mathf.Abs(delta.y));
 			if (hit.collider)
 			{
 				// 将边贴合到撞击点
-				this.SnapEdgeToPoint(side, hit.point);
+				this.SnapEdge(side, hit.point.y);
 
 				// 钳制速度
 				if (MathUtility.SignInt(this.Velocity.y) == side.y)
 					this.Velocity = new Vector2(this.Velocity.x, 0);
+
+				DebugUtility.DrawArrowBetween(this.Position, hit.point);
 			}
 
 			// 更新碰撞信息
-			m_verticalContacted = hit.collider;
-			m_contactDirect.y = hit.collider ? dir : 0;
 		}
 	}
 
@@ -240,11 +260,11 @@ public class KinematicBody : MonoBehaviour
 		{
 			string mesg =
 				$"velocity : {this.Velocity}\n" +
-				$"position : {this.Position}\n" +
-				$"top : {this.topContact}\n" +
-				$"bottom : {this.bottomContact}\n" +
-				$"left : {this.leftContact}\n" +
-				$"right : {this.rightContact}\n";
+				$"position : {this.Position}\n";
+				//$"top : {this.topContact}\n" +
+				//$"bottom : {this.bottomContact}\n" +
+				//$"left : {this.leftContact}\n" +
+				//$"right : {this.rightContact}\n";
 			UnityEditor.Handles.Label(this.Centre, mesg, UnityEditor.EditorStyles.boldLabel);
 		}
 	}
