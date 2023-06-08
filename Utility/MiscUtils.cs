@@ -75,18 +75,18 @@ public static class MiscUtils
 		}
 	}
 
-	public static IEnumerable<Vector2> Cast(this IEnumerable<Vector3> src)
+	public static IEnumerable<Vector2> CastToVec2(this IEnumerable<Vector3> src)
 	{
 		foreach (var i in src)
 			yield return new Vector2(i.x, i.y);
 	}
-	public static IEnumerable<Vector3> Cast(this IEnumerable<Vector2> src, float z = 0)
+	public static IEnumerable<Vector3> CastToVec3(this IEnumerable<Vector2> src, float z = 0)
 	{
 		foreach (var i in src)
 			yield return new Vector3(i.x, i.y, z);
 	}
 
-	public static IEnumerable<T1> Export<T1, T2>(this IEnumerable<T2> src, System.Func<T2, T1> export)
+	public static IEnumerable<T1> Process<T1, T2>(this IEnumerable<T2> src, System.Func<T2, T1> export)
 	{
 		foreach (var i in src)
 			yield return export.Invoke(i);
@@ -220,11 +220,15 @@ public static class MiscUtils
 
 	public static IEnumerable<float> SampleValue(int sample, float v)
 	{
-		sample = Mathf.Max(sample, 1);
-		for (int i = 0; i < sample; i++)
-		{
-			float r = i / (sample - 1);
-			yield return v * r;
+		if (sample < 2)
+			yield return 0;
+		else
+		{ 
+			for (int i = 0; i < sample; i++)
+			{
+				float r = (float)i / (sample - 1);
+				yield return v * r;
+			}
 		}
 	}
 
@@ -364,7 +368,7 @@ public static class MiscUtils
 
 	// 按顺序获取被选中的任意对象, 必须继承自UnityEngine.Object
 	// 使用过滤器进行过滤
-	public static IEnumerable<T> GetSelectedByOrder<T>(System.Func<T, bool> filter = null)
+	public static IEnumerable<T> GetSelectedObjectByOrder<T>(System.Func<T, bool> filter = null)
 		where T : UnityEngine.Object
 	{
 		var selected = Selection.objects;
@@ -387,11 +391,9 @@ public static class MiscUtils
 		}
 	}
 
-	public static float GizmoScale(Vector3 position, Camera camera = null)
+	public static float GizmoScale(Vector3 position, Camera camera)
 	{
-		camera = camera ?? Camera.current;
 		position = Gizmos.matrix.MultiplyPoint(position);
-
 		if (camera)
 		{
 			Transform transform = camera.transform;
@@ -405,6 +407,8 @@ public static class MiscUtils
 
 		return 20f;
 	}
+	public static float EditorGizmoScale(Vector3 position)
+		=> GizmoScale(position, SceneView.lastActiveSceneView.camera);
 
 	// 编辑器快速操作
 	// 不可用, 待修复
@@ -433,7 +437,7 @@ public static class MiscUtils
 
 	// 编辑器快速操作
 	// 首先在选中的所有对象中计算ymin和ymax, 再进行均匀分布
-	[MenuItem("MiscUtils/Spacing YAxis")]
+	[MenuItem("MiscUtils/Spacing y axis")]
 	public static void SpacingYAxis()
 	{
 		var itor = MiscUtils.GetSelectedComponentsByOrder<Transform>();
@@ -462,6 +466,115 @@ public static class MiscUtils
 			pos.y = yDelta * i + yMin;
 
 			result[i].transform.localPosition = pos;
+		}
+	}
+// 绘制纹理
+	public static void GUIDrawTexture(Sprite sprite, float height, float? x_offset = null)
+	{
+		var rect = EditorGUILayout.GetControlRect(false, height);
+
+		// 绘制底色
+		EditorGUI.DrawRect(rect, new Color(0.31f, 0.31f, 0.31f));
+
+		if (sprite != null)
+		{
+			// 计算精灵的绘制大小
+			// 为了维持精灵的比例
+			// 以高度为标准, 计算实际高度与绘制高度的比值
+			// 再将宽度乘以比值
+			var r = rect.height / sprite.rect.height;
+			var size = new Vector2(r * sprite.rect.width, rect.height);
+
+			// 计算精灵的绘制坐标
+			// 若没有提供特定偏移则设为中心
+			x_offset = x_offset ?? rect.width * 0.5f;
+			var pos = new Vector2(x_offset.Value, rect.y);
+
+			rect.size = size;
+			rect.position = pos;
+
+			// 计算精灵在纹理上的归一矩形
+			var tex_rect = sprite.textureRect;
+
+			var tex_size = new Vector2(sprite.texture.width, sprite.texture.height);
+
+			tex_rect.position /= tex_size;
+			tex_rect.size /= tex_size;
+
+			EditorGUI.DrawRect(rect, new Color(1.0f, 0.0f, 1.0f));
+			GUI.DrawTextureWithTexCoords(rect, sprite.texture, tex_rect);
+		}
+		else
+		{
+			var content = new GUIContent("No Image");
+			var size = EditorStyles.label.CalcSize(content);
+
+			var pos = rect.center - size * 0.5f;
+
+			rect.size = size;
+			rect.position = pos;
+
+			GUI.Label(rect, content, EditorStyles.label);
+		}
+	}
+
+	// 绘制单条条目
+	public static bool GUIOptional(bool selected, string content)
+	{
+		return EditorGUILayout.Toggle(selected, EditorStyles.miniButton);
+		// var pos = EditorGUILayout.GetControlRect();
+
+		//Color bg_color = selected ? new Color(0.3f, 0.3f, 0.3f) : new Color(0.2f, 0.2f, 0.2f);
+		//if (Event.current.type == EventType.Repaint && pos.Contains(Event.current.mousePosition))
+		//{
+		//	bg_color = new Color(0.25f, 0.25f, 0.25f);
+		//}
+		//else if (Event.current.type == EventType.MouseDown)
+		//{
+		//	selected = true;
+		//}
+
+		//// 绘制条目底色
+		//EditorGUI.DrawRect(pos, bg_color);
+		//GUI.Label(pos, content);
+
+		//return selected;
+	}
+
+	// 绘制条目列表
+	public static void GUIOptionalList(ref Vector2 scroll_pos, ref int selected, System.Func<int, string> getter, params GUILayoutOption[] options)
+	{
+		var hs = GUI.skin.verticalScrollbar; // 禁用水平滚动条
+		scroll_pos = EditorGUILayout.BeginScrollView(scroll_pos, GUIStyle.none, hs, options);
+
+		int i = 0;
+		for (string str = getter(i); str != null && i < 255; str = getter(++i))
+		{
+			if (MiscUtils.GUIOptional(i == selected, str))
+				selected = i;
+		}
+
+		// 列表为空时, 绘制占位符None
+		if (i == 0)
+		{
+			MiscUtils.GUIOptional(true, "None");
+		}
+
+		EditorGUILayout.EndScrollView();
+	}	// 朝向编辑器视图
+	[MenuItem("MiscUtils/Towards editor view")]
+	public static void TowardsEditorView()
+	{
+		var itor = MiscUtils.GetSelectedComponentsByOrder<Transform>();
+		var trs = new List<Transform>(itor);
+
+		Undo.RecordObjects(trs.ToArray(), "Spacing Spacing YAxis");
+
+		var camera = SceneView.lastActiveSceneView.camera;
+		foreach (var tr in trs)
+		{
+			var dir = (camera.transform.position - tr.position).normalized;
+			tr.forward = dir;
 		}
 	}
 #endif

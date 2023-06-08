@@ -44,7 +44,7 @@ public static class DebugUtility
 		var param = args ?? DrawParam.Default;
 
 		// 根据当前编辑器视图缩放比例来计算尺寸
-		float scale = HandleUtility.GetHandleSize(pos);
+		var scale = MiscUtils.EditorGizmoScale(pos);
 		param.size *= scale;
 
 		Vector3 xOffset = param.size * 0.5f * Vector3.right;
@@ -57,7 +57,7 @@ public static class DebugUtility
 	}
 
 	[Conditional("UNITY_EDITOR")]
-	public static void DrawArrow(Vector2 pos, Vector2 vec, DrawParam? args = null)
+	public static void DrawArrow(Vector3 pos, Vector3 vec, DrawParam? args = null)
 	{
 		const float ArrowHeadAngle = 15.0f;
 
@@ -71,7 +71,7 @@ public static class DebugUtility
 		left = Quaternion.AngleAxis(Vector2.Angle(vec, Vector2.zero) + ArrowHeadAngle, Vector3.forward) * left;
 		right = Quaternion.AngleAxis(Vector2.Angle(vec, Vector2.zero) - ArrowHeadAngle, Vector3.forward) * right;
 
-		float scale = MiscUtils.GizmoScale(pos, SceneView.lastActiveSceneView.camera);
+		var scale = MiscUtils.EditorGizmoScale(pos);
 		param.size *= scale;
 
 		DebugUtility.DrawRay(pos + vec, left * param.size, args);
@@ -79,7 +79,7 @@ public static class DebugUtility
 	}
 
 	[Conditional("UNITY_EDITOR")]
-	public static void DrawArrowBetween(Vector2 start, Vector2 target, DrawParam? args = null)
+	public static void DrawArrowBetween(Vector3 start, Vector3 target, DrawParam? args = null)
 	{
 		var vec = target - start;
 		DebugUtility.DrawArrow(start, vec, args);
@@ -93,10 +93,10 @@ public static class DebugUtility
 	}
 
 	[Conditional("UNITY_EDITOR")]
-	public static void DrawRay(Vector2 pos, Vector2 vec, DrawParam? args = null)
+	public static void DrawRay(Vector3 pos, Vector3 dir, DrawParam? args = null)
 	{
 		var param = args ?? DrawParam.Default;
-		UnityEngine.Debug.DrawRay(pos, vec, param.color, param.duration, param.deepTest);
+		UnityEngine.Debug.DrawRay(pos, dir, param.color, param.duration, param.deepTest);
 	}
 
 	[Conditional("UNITY_EDITOR")]
@@ -158,8 +158,8 @@ public static class DebugUtility
 	{
 		DrawBox(Vector2.Lerp(min, max, 0.5f), (max - min), 0, args);
 
-		DrawMark(min, args);
-		DrawMark(max, args);
+		DrawMark(min, DrawParam.Default);
+		DrawMark(max, DrawParam.Default);
 	}
 
 	[Conditional("UNITY_EDITOR")]

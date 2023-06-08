@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3bceb78d01c77fe4abe611701bf12c81, type: 3}
+  m_Name: new KeyframeSequence
+  m_EditorClassIdentifier: 
+  m_keyframes:
+  - sprite: {fileID: -1320880028, guid: 20ea94d20e0ac6c49a553d5ddd688478, type: 3}
+    length: 1
+    offset: 0
+  - sprite: {fileID: 1799564568, guid: 20ea94d20e0ac6c49a553d5ddd688478, type: 3}
+    length: 1
+    offset: 1
+  - sprite: {fileID: 4912775, guid: 20ea94d20e0ac6c49a553d5ddd688478, type: 3}
+    length: 1
+    offset: 2
+  - sprite: {fileID: -541860540, guid: 20ea94d20e0ac6c49a553d5ddd688478, type: 3}
+    length: 1
+    offset: 3
+  - sprite: {fileID: -1695151999, guid: 20ea94d20e0ac6c49a553d5ddd688478, type: 3}
+    length: 1
+    offset: 4
+  m_sample: 24
+  m_totalFrameCount: 0
