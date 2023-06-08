@@ -3,8 +3,15 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-public class PositionAlignmentTool
+public class PositionAlignmentTool : EditorWindow
 {
+	[MenuItem("MiscTools/Position alignment tool")]
+	private static void Init()
+	{
+		var window = (PositionAlignmentTool)GetWindow(typeof(PositionAlignmentTool));
+		window.Show();
+	}
+
 	private bool m_alignX = false;
 	private bool m_alignY = false;
 	private bool m_alignZ = true;
@@ -84,7 +91,6 @@ public class PositionAlignmentTool
 		EditorGUILayout.EndHorizontal();
 
 		GUILayout.EndArea();
-
 		return rect;
 	}
 
@@ -206,6 +212,11 @@ public class PositionAlignmentTool
 		var lastPos = this.OptionPanel(Vector2.zero, bgc).yMax;
 		lastPos = this.SelectedTrListPanel(new Vector2(0, lastPos + 5), bgc).yMax;
 		lastPos = this.OperationPanel(new Vector2(0, lastPos + 5), bgc).yMax;
+	}
+
+	private void OnGUI()
+	{
+		this.Draw(this.position);
 	}
 }
 

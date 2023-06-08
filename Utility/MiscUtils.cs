@@ -1,6 +1,7 @@
 /*urada 2023/5/29*/
 using System.Collections;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 #if UNITY_EDITOR
@@ -10,6 +11,8 @@ using UnityEditor;
 // 一些迭代器拓展方法可能和system.linq中的重复
 public static class MiscUtils
 {
+	public static Color ClearAlpha => new Color(1, 1, 1, 0);
+
 	public static bool InLayer(this GameObject go, string layer)
 		=> InLayer(go, LayerMask.GetMask(layer));
 	public static bool InLayer(this GameObject go, LayerMask layermask)
@@ -223,7 +226,7 @@ public static class MiscUtils
 		if (sample < 2)
 			yield return 0;
 		else
-		{ 
+		{
 			for (int i = 0; i < sample; i++)
 			{
 				float r = (float)i / (sample - 1);
@@ -368,7 +371,7 @@ public static class MiscUtils
 
 	// 按顺序获取被选中的任意对象, 必须继承自UnityEngine.Object
 	// 使用过滤器进行过滤
-	public static IEnumerable<T> GetSelectedByOrder<T>(System.Func<T, bool> filter = null)
+	public static IEnumerable<T> GetSelectedObjectByOrder<T>(System.Func<T, bool> filter = null)
 		where T : UnityEngine.Object
 	{
 		var selected = Selection.objects;
@@ -437,7 +440,7 @@ public static class MiscUtils
 
 	// 编辑器快速操作
 	// 首先在选中的所有对象中计算ymin和ymax, 再进行均匀分布
-	[MenuItem("MiscUtils/Spacing y axis")]
+	[MenuItem("MiscTools/Spacing y axis")]
 	public static void SpacingYAxis()
 	{
 		var itor = MiscUtils.GetSelectedComponentsByOrder<Transform>();
@@ -470,7 +473,7 @@ public static class MiscUtils
 	}
 
 	// 朝向编辑器视图
-	[MenuItem("MiscUtils/Towards editor view")]
+	[MenuItem("MiscTools/Towards editor view")]
 	public static void TowardsEditorView()
 	{
 		var itor = MiscUtils.GetSelectedComponentsByOrder<Transform>();
@@ -483,6 +486,31 @@ public static class MiscUtils
 		{
 			var dir = (camera.transform.position - tr.position).normalized;
 			tr.forward = dir;
+		}
+	}
+
+	// 多对象重命名
+	// [MenuItem("MiscTools/Rename")]
+	public static void ObjectRename()
+	{
+		// 匹配式
+		const string Pattern = ".*";
+
+		// 目标式
+		const string Replacement = "arrow";
+
+		var rex = new Regex(Pattern);
+
+		var itor = MiscUtils.GetSelectedObjectByOrder<UnityEngine.Object>();
+		var tmp = new List<UnityEngine.Object>(itor);
+
+		Undo.RecordObjects(tmp.ToArray(), "Batch rename");
+
+		int index = 0;
+		foreach (var obj in itor)
+		{
+			var newName = Regex.Replace(obj.name, Pattern, Replacement);
+			obj.name = "arrow" + $" ({index++})";
 		}
 	}
 #endif
