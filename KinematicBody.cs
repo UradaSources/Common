@@ -69,7 +69,7 @@ public class KinematicBody : MonoBehaviour
 	public delegate bool CollisionFliter(Vector2Int side, RaycastHit2D hit);
 
 	// 最小间隙
-	public const float MinSpace = 0.001f;
+	public const float MinSpace = 0.01f;
 
 	// 最小爬坡角度
 	public const float MaxClimbAngle = 10.0f;

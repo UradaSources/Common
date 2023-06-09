@@ -2,17 +2,18 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[DisallowMultipleComponent]
 [RequireComponent(typeof(BoxCollider2D))]
 public class SpaceshipCabin : MonoBehaviour
 {
 	[SerializeField]
+	private BoxCollider2D m_trigger;
+
+	[SerializeField]
 	private SpaceshipStructure m_structure;
 
 	[SerializeField]
-	private BoxCollider2D m_floor;
-
-	[SerializeField]
-	private Vector2 _size;
+	private StructureFloor m_floor;
 
 	public Vector2 Position
 	{
@@ -28,32 +29,34 @@ public class SpaceshipCabin : MonoBehaviour
 	{
 		set
 		{
-			_size = value;
-
-			var thickness = GlobalSpaceshipData.Main.FloorThickness;
-			m_floor.size = new Vector2(_size.x, thickness);
-
-			var offset = -_size.y * 0.5f + m_floor.size.y * 0.5f;
-			m_floor.offset = new Vector2(0, offset);
+			m_trigger.size = value;
+			m_floor.UpdateSize(m_trigger.size);
 		}
-		get => _size;
+		get => m_trigger.size;
 	}
 
 #if UNITY_EDITOR
-	private void Reset()
-	{
-		m_structure = this.GetComponentInParent<SpaceshipStructure>();
-		m_floor = this.GetComponent<BoxCollider2D>();
-	}
+	[Header("Editor only")]
+
+	[SerializeField]
+	private Vector2 __size = Vector2.one;
 
 	private void OnValidate()
 	{
-		this.Size = _size;
+		if (m_trigger && m_floor)
+			this.Size = __size;
+	}
+
+	private void Reset()
+	{
+		m_structure = this.GetComponentInParent<SpaceshipStructure>();
+		m_floor = this.GetComponentInChildren<StructureFloor>();
 	}
 
 	private void OnDrawGizmosSelected()
 	{
-		DebugUtils.DrawBox(this.Position, this.Size);
+		if (m_trigger && m_floor)
+			DebugUtils.DrawBox(this.Position, this.Size);
 	}
 #endif
 }

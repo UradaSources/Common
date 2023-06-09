@@ -8,33 +8,28 @@ public class PawnTester : MonoBehaviour
 	private Rigidbody2D m_rb;
 
 	[SerializeField]
+	private PawnMotion m_motion;
+
+	[SerializeField]
 	private float m_speed;
 
 	[SerializeField]
-	private float m_jumpSpeed;
+	private float m_acc;
 
-	private bool m_jumpKeyDown;
+	[SerializeField]
+	private float m_dec;
+
+	[SerializeField]
+	private float m_jumpHeight;
 
 	private void Update()
 	{
-		if (Input.GetKeyDown(KeyCode.Space))
-			m_jumpKeyDown = true;
-	}
-
-	private void FixedUpdate()
-	{
 		var dir = Input.GetAxisRaw("Horizontal");
-		var target = dir * m_speed;
+		var targetSpeed = dir * m_speed;
 
-		var vel = m_rb.velocity;
-		vel.x = target;
+		m_motion.MoveTowards(targetSpeed, m_acc, m_dec);
 
-		if (m_jumpKeyDown)
-			vel.y = m_jumpSpeed;
-
-		m_jumpKeyDown = false;
-
-		vel += Physics2D.gravity * Time.fixedDeltaTime;
-		m_rb.velocity = vel;
+		if (Input.GetKeyDown(KeyCode.Space))
+			m_motion.JumpToHeight(m_jumpHeight);
 	}
 }

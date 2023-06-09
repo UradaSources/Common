@@ -102,6 +102,13 @@ public static class MiscUtils
 		return result;
 	}
 
+	public static Sprite CreateSprite(Texture2D tex, int pixelsPerUnit)
+	{
+		var rect = new Rect(position:Vector2.zero, tex.texelSize);
+		var pivot = new Vector2(0.5f, 0.5f);
+		return Sprite.Create(tex, rect, pivot, pixelsPerUnit);
+	}
+
 	public static Texture2D CreateTexture(int w, int h, Color? color, bool temporary = true)
 	{
 		color = color ?? Color.clear;

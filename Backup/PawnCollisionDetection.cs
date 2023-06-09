@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[DefaultExecutionOrder(100), DisallowMultipleComponent]
+[DefaultExecutionOrder(-1), DisallowMultipleComponent]
 public class PawnCollisionDetection : MonoBehaviour
 {
 	public const float MinSpace = 0.001f;
@@ -69,7 +69,7 @@ public class PawnCollisionDetection : MonoBehaviour
 
 		// 清空缓冲区并进行碰撞检测
 		m_hitButter.Clear();
-		m_collider.Cast(side.normalized, filter.NoFilter(), m_hitButter, delta);
+		m_collider.Cast(side.normalized, filter, m_hitButter, delta);
 
 		// 进行可能的碰撞过滤
 		foreach (var candidateHit in m_hitButter)
@@ -85,6 +85,10 @@ public class PawnCollisionDetection : MonoBehaviour
 
 	private void FixedUpdate()
 	{
+		var vel = m_rb.velocity;
+		vel += Physics2D.gravity * Time.fixedDeltaTime;
+		m_rb.velocity = vel;
+
 		// 计算位置增量并测试碰撞
 		var delta = m_rb.velocity * Time.fixedDeltaTime;
 		if (!Mathf.Approximately(delta.x, 0))
@@ -93,7 +97,9 @@ public class PawnCollisionDetection : MonoBehaviour
 			if (this.CollisionTest(out var hit, side, Mathf.Abs(delta.x)))
 			{ 
 				this.SnapEdge(side, hit.point);
-				
+
+				DebugUtils.DrawMark(hit.point, new DrawParam(color: Color.yellow, duration: 10));
+
 				// do something
 			}
 		}
@@ -103,7 +109,9 @@ public class PawnCollisionDetection : MonoBehaviour
 			if (this.CollisionTest(out var hit, side, Mathf.Abs(delta.y)))
 			{
 				this.SnapEdge(side, hit.point);
-	
+
+				DebugUtils.DrawMark(hit.point, new DrawParam(color: Color.red, duration: 10));
+
 				// do something
 			}
 		}
