@@ -27,117 +27,86 @@ public class PawnCollisionDetection : MonoBehaviour
 		get => m_rb.position + m_collider.offset;
 	}
 
-	public void SnapEdgeX(float dir, float pos, float space = MinSpace)
+	public void SnapEdge(Vector2 side, Vector2 pos, float space = MinSpace, bool clampSpeed = true)
 	{
-		if (dir != 0)
+		if (side.x != 0)
 		{
+			var dir = Mathf.Sign(side.x);
+
 			// 使用碰撞盒中心计算对齐后的坐标并应用
 			var half = m_collider.size.x * 0.5f + space;
-			this.Centre = new Vector2(pos - dir * half, this.Centre.y);
-		}
-	}
-	public void SnapEdgeY(float dir, float pos, float space = MinSpace)
-	{
-		if (dir != 0)
-		{
-			// 使用碰撞盒中心计算对齐后的坐标并应用
-			var half = m_collider.size.y * 0.5f + space;
-			this.Centre = new Vector2(this.Centre.x, pos - dir * half);
-		}
-	}
+			this.Centre = new Vector2(pos.x - dir * half, this.Centre.y);
 
-	private RaycastHit2D CollisionTestX(float dir, float delta = MinSpace)
-	{
-		var angle = Vector2.SignedAngle(new Vector2(dir, 0), Vector2.left);
-
-		var filter = new ContactFilter2D()
-		{
-			useLayerMask = true,
-			layerMask = m_layerMask,
-
-			useNormalAngle = true,
-			minNormalAngle = angle - MaxClimbAngle,
-			maxNormalAngle = angle + MaxClimbAngle
-		};
-
-		// 清空缓冲区并进行碰撞检测
-		m_hitButter.Clear();
-		m_collider.Cast(new Vector2(dir, 0), filter, m_hitButter, delta);
-
-		// 进行可能的碰撞过滤
-		foreach (var candidateHit in m_hitButter)
-		{
-			//if (this.Fliter == null || this.Fliter(side, candidateHit))
-			return candidateHit;
-		}
-		return default;
-	}
-	private RaycastHit2D CollisionTestY(float dir, float delta = MinSpace)
-	{
-		var angle = Vector2.SignedAngle(new Vector2(0, -dir), Vector2.left);
-
-		var filter = new ContactFilter2D()
-		{
-			useLayerMask = true,
-			layerMask = m_layerMask,
-
-			useNormalAngle = true,
-			minNormalAngle = angle - MaxClimbAngle,
-			maxNormalAngle = angle + MaxClimbAngle
-		};
-
-		// 清空缓冲区并进行碰撞检测
-		m_hitButter.Clear();
-		m_collider.Cast(new Vector2(0, dir), filter, m_hitButter, delta);
-
-		// 进行可能的碰撞过滤
-		foreach (var candidateHit in m_hitButter)
-		{
-			//if (this.Fliter == null || this.Fliter(side, candidateHit))
-			return candidateHit;
-		}
-		return default;
-	}
-
-	private void HandleCollisionX(float delta)
-	{
-		if (Mathf.Approximately(delta, 0)) return;
-
-		var dir = MathUtils.SignInt(delta);
-		var hit = this.CollisionTestX(dir, Mathf.Abs(delta));
-		if (hit.collider)
-		{
-			// 将边贴合到撞击点
-			this.SnapEdgeX(dir, hit.point.x);
-
-			// 钳制速度
-			if (MathUtils.SignInt(m_rb.velocity.x) != dir)
+			if (clampSpeed && Mathf.Sign(m_rb.velocity.x) == dir)
 				m_rb.velocity = new Vector2(0, m_rb.velocity.y);
 		}
-	}
-	private void HandleCollisionY(float delta)
-	{
-		if (Mathf.Approximately(delta, 0)) return;
-
-		var dir = MathUtils.SignInt(delta);
-		var hit = this.CollisionTestY(dir, Mathf.Abs(delta));
-		if (hit.collider)
+		if (side.y != 0)
 		{
-			// 将边贴合到撞击点
-			this.SnapEdgeY(dir, hit.point.y);
+			var dir = Mathf.Sign(side.y);
 
-			// 钳制速度
-			if (MathUtils.SignInt(m_rb.velocity.y) != dir)
+			// 使用碰撞盒中心计算对齐后的坐标并应用
+			var half = m_collider.size.y * 0.5f + space;
+			this.Centre = new Vector2(this.Centre.x, pos.y - dir * half);
+
+			if (clampSpeed && Mathf.Sign(m_rb.velocity.y) == dir)
 				m_rb.velocity = new Vector2(m_rb.velocity.x, 0);
 		}
+	}
+
+	private bool CollisionTest(out RaycastHit2D hit, Vector2 side, float delta = MinSpace)
+	{
+		var angle = Vector2.SignedAngle(side * new Vector2(1, -1), Vector2.left);
+
+		var filter = new ContactFilter2D()
+		{
+			useLayerMask = true,
+			layerMask = m_layerMask,
+
+			useNormalAngle = true,
+			minNormalAngle = angle - MaxClimbAngle,
+			maxNormalAngle = angle + MaxClimbAngle
+		};
+
+		// 清空缓冲区并进行碰撞检测
+		m_hitButter.Clear();
+		m_collider.Cast(side.normalized, filter.NoFilter(), m_hitButter, delta);
+
+		// 进行可能的碰撞过滤
+		foreach (var candidateHit in m_hitButter)
+		{
+			//if (this.Fliter == null || this.Fliter(side, candidateHit))
+			hit = candidateHit;
+			return true;
+		}
+
+		hit = default;
+		return false;
 	}
 
 	private void FixedUpdate()
 	{
 		// 计算位置增量并测试碰撞
 		var delta = m_rb.velocity * Time.fixedDeltaTime;
-		this.HandleCollisionX(delta.x);
-		this.HandleCollisionY(delta.y);
+		if (!Mathf.Approximately(delta.x, 0))
+		{
+			var side = new Vector2(Mathf.Sign(delta.x), 0);
+			if (this.CollisionTest(out var hit, side, Mathf.Abs(delta.x)))
+			{ 
+				this.SnapEdge(side, hit.point);
+				
+				// do something
+			}
+		}
+		if (!Mathf.Approximately(delta.y, 0))
+		{
+			var side = new Vector2(0, Mathf.Sign(delta.y));
+			if (this.CollisionTest(out var hit, side, Mathf.Abs(delta.y)))
+			{
+				this.SnapEdge(side, hit.point);
+	
+				// do something
+			}
+		}
 	}
 
 	public void RequireCommponent()

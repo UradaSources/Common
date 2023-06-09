@@ -253,7 +253,7 @@ public static class DebugUtils
 	//public static void DrawMesgOnScreen(Vector2 screenPos, string richMesg)
 	//{
 	//	var pos = Camera.main.ScreenToWorldPoint(screenPos);
-	//	DebugUtility.DrawMesg(pos, richMesg);
+	//	DebugUtils.DrawMesg(pos, richMesg);
 	//}
 	//public static void DrawMesg(Vector2 pos, string richMesg)
 	//{
