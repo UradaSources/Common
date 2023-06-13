@@ -50,6 +50,33 @@ public static class MiscUtils
 		return dst.Count - count;
 	}
 
+	public static IEnumerable<T> ListRange<T>(IList<T> src, int index, int length)
+	{
+		Debug.Assert(index >= 0 && index < src.Count);
+
+		length = Mathf.Clamp(length, 1, src.Count - index);
+		for (int i = index; i < index + length; i++)
+			yield return src[i];
+	}
+
+	// 待修复
+	//public static IEnumerable<T> ListRange<T>(IEnumerable<T> src, int index, int length)
+	//{
+	//	Debug.Assert(index >= 0);
+
+	//	length = Mathf.Min(length, 1);
+
+	//	int i = 0;
+	//	foreach (var v in src)
+	//	{
+	//		if (i >= index)
+	//			yield return v;
+
+	//		if (++i < index + length)
+	//			yield break;
+	//	}
+	//}
+
 	public static int ConverAndAppendList<T1, T2>(ref List<T1> dst, IEnumerable<T2> src, bool allowRepeat = false)
 	{
 		int count = dst.Count;
@@ -217,6 +244,39 @@ public static class MiscUtils
 		}
 		str += "}";
 		return str;
+	}
+
+	public static string ListConcat<T>(IList<T> src, string separator = "")
+	{
+		var buffer = new System.Text.StringBuilder();
+
+		for (int i = 0; i < src.Count; i++)
+		{
+			if (i > 0)
+				buffer.Append(separator);
+
+			buffer.Append(src[i].ToString());
+		}
+		return buffer.ToString();
+	}
+	public static string ListConcat(string separator = "", params object[] args)
+		=> ListConcat(args, separator);
+
+	public static string ListConcat<T>(IEnumerable<T> src, string separator = "")
+	{
+		var buffer = new System.Text.StringBuilder();
+
+		bool first = true;
+		foreach (var v in src)
+		{
+			if (first) 
+				first = false;
+			else
+				buffer.Append(separator);
+
+			buffer.Append(v.ToString());
+		}
+		return buffer.ToString();
 	}
 
 	public static IEnumerable<float> SampleValue(int sample, float v)
