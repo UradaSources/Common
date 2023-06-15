@@ -18,5 +18,20 @@ public class MiscToolWindow : EditorWindow
 	private void OnGUI()
 	{
 		m_positionAlignmentTool.Draw(this.position);
+
+		if (GUILayout.Button("Create Animation"))
+		{
+			string path = EditorUtility.SaveFilePanelInProject("", "new SpriteAnimation", "asset", "");
+			if (!string.IsNullOrEmpty(path))
+			{
+				var selectedSprites = MiscUtils.GetSelectedObjectByOrder<Sprite>();
+				var asset = ScriptableObject.CreateInstance<SpriteAnimation>();
+
+				asset.SetKeyframe(selectedSprites.Process((Sprite sp)=>new SpriteAnimation.Keyframe(sp)));
+
+				AssetDatabase.CreateAsset(asset, path);
+				AssetDatabase.SaveAssets();
+			}
+		}
 	}
 }

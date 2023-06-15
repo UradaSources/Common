@@ -1,9 +1,60 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[DefaultExecutionOrder(-1), DisallowMultipleComponent]
-public class PawnCollisionDetection : MonoBehaviour
+public struct CollidedInfo
+{
+	public static implicit operator bool(CollidedInfo info)
+		=> info.xDirect != 0 || info.yDirect != 0;
+
+	public float xDirect;
+	public float yDirect;
+
+	public Collider2D xContact;
+	public Collider2D yContact;
+
+	public Vector2 velocity;
+	public Vector2 position;
+
+	public Collider2D RightContact
+	{
+		get => xDirect == 1 ?
+			xContact : null;
+	}
+	public Collider2D LeftContact
+	{
+		get => xDirect == -1 ?
+			xContact : null;
+	}
+
+	public Collider2D TopContact
+	{
+		get => yDirect == 1 ?
+			yContact : null;
+	}
+	public Collider2D BottomContact
+	{
+		get => yDirect == -1 ?
+			yContact : null;
+	}
+
+	public void RecordContactX(float dir, Collider2D contact , Vector2 pos)
+	{
+		this.xDirect = dir;
+		this.xContact = contact ;
+		this.position.x = pos.x;
+	}
+	public void RecordContactY(float dir, Collider2D contact, Vector2 pos)
+	{
+		this.yDirect = dir;
+		this.yContact = contact;
+		this.position.y = pos.y;
+	}
+}
+
+[RequireComponent(typeof(Rigidbody2D), typeof(BoxCollider2D))]
+[DefaultExecutionOrder(10), DisallowMultipleComponent]
+public class PawnPhysicsBody : MonoBehaviour
 {
 	public const float MinSpace = 0.001f;
 
@@ -18,14 +69,33 @@ public class PawnCollisionDetection : MonoBehaviour
 	[SerializeField]
 	private LayerMask m_layerMask;
 
+	[SerializeField]
+	private float m_gravityScale = 1.0f;
+
 	// 储存命中信息的缓冲区
 	private List<RaycastHit2D> m_hitButter = new List<RaycastHit2D>();
+
+	// 储存的碰撞信息
+	private CollidedInfo m_info = new CollidedInfo();
+
+	public Vector2 Gravity
+	{
+		get => m_gravityScale * Physics2D.gravity;
+	}
 
 	public Vector2 Centre
 	{
 		set => m_rb.position = value - m_collider.offset;
 		get => m_rb.position + m_collider.offset;
 	}
+
+	public Vector2 Velocity
+	{
+		set => m_rb.velocity = value;
+		get => m_rb.velocity;
+	}
+
+	public CollidedInfo CollidedInfo { get => m_info; }
 
 	public void SnapEdge(Vector2 side, Vector2 pos, float space = MinSpace, bool clampSpeed = true)
 	{
@@ -85,34 +155,38 @@ public class PawnCollisionDetection : MonoBehaviour
 
 	private void FixedUpdate()
 	{
+		if (!m_rb.simulated) return;
+
 		var vel = m_rb.velocity;
-		vel += Physics2D.gravity * Time.fixedDeltaTime;
+		vel += this.Gravity * Time.fixedDeltaTime;
 		m_rb.velocity = vel;
+
+		// 重置并准备更新碰撞信息
+		m_info = default;
+		m_info.velocity = m_rb.velocity;
 
 		// 计算位置增量并测试碰撞
 		var delta = m_rb.velocity * Time.fixedDeltaTime;
 		if (!Mathf.Approximately(delta.x, 0))
 		{
-			var side = new Vector2(Mathf.Sign(delta.x), 0);
+			var dir = Mathf.Sign(delta.x);
+			var side = new Vector2(dir, 0);
 			if (this.CollisionTest(out var hit, side, Mathf.Abs(delta.x)))
 			{ 
 				this.SnapEdge(side, hit.point);
-
-				DebugUtils.DrawMark(hit.point, new DrawParam(color: Color.yellow, duration: 10));
-
-				// do something
+				m_info.RecordContactX(dir, hit.collider, hit.point);
+				// DebugUtils.DrawMark(hit.point, new DrawParam(color: Color.yellow, duration: 10));
 			}
 		}
 		if (!Mathf.Approximately(delta.y, 0))
 		{
-			var side = new Vector2(0, Mathf.Sign(delta.y));
+			var dir = Mathf.Sign(delta.y);
+			var side = new Vector2(0, dir);
 			if (this.CollisionTest(out var hit, side, Mathf.Abs(delta.y)))
 			{
 				this.SnapEdge(side, hit.point);
-
-				DebugUtils.DrawMark(hit.point, new DrawParam(color: Color.red, duration: 10));
-
-				// do something
+				m_info.RecordContactY(dir, hit.collider, hit.point);
+				// DebugUtils.DrawMark(hit.point, new DrawParam(color: Color.red, duration: 10));
 			}
 		}
 	}
@@ -131,6 +205,7 @@ public class PawnCollisionDetection : MonoBehaviour
 	private void Reset()
 	{
 		m_layerMask = ~0;
+		m_gravityScale = 1.0f;
 
 		this.RequireCommponent();
 	}

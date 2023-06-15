@@ -2,65 +2,85 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(PawnPhysicsBody))]
+[DisallowMultipleComponent, DefaultExecutionOrder(1)]
 public class PawnMotion : MonoBehaviour
 {
 	[SerializeField]
-	private Rigidbody2D m_rb;
+	private PawnPhysicsBody m_body;
 
-	// »º´æµÄÔË¶¯²ÎÊý
-	// ½«ÔÚÉÔºóµÄfxiedUpdateÀïÓ¦ÓÃ
-	private float m_speed;
-
+	[SerializeField]
 	private float m_acc;
+
+	[SerializeField]
 	private float m_dec;
 
-	// µ±Ç°µÄÔË¶¯·½Ïò
+	[SerializeField]
+	private float m_midairDragFactor = 1.0f;
+
+	[SerializeField]
+	private float m_midairSpeedFactor = 1.0f;
+
+	// ç¼“å­˜çš„è¿åŠ¨å‚æ•°
+	// å°†åœ¨ç¨åŽçš„fxiedUpdateé‡Œåº”ç”¨
+	private float m_targetSpeed;
+
+	// å½“å‰çš„è¿åŠ¨æ–¹å‘
 	public float Toward
 	{
-		get => Mathf.Approximately(m_speed, 0) ? 0 : Mathf.Sign(m_speed);
+		get => Mathf.Approximately(m_targetSpeed, 0) ?
+			0 : Mathf.Sign(m_targetSpeed);
 	}
 
-	public void MoveTowards(float speed, float acc, float dec)
+	public void MoveTowards(float speed)
 	{
-		m_speed = speed;
-
-		m_acc = acc;
-		m_dec = dec;
+		m_targetSpeed = speed;
 	}
 
 	public void Jump(float initSpeed)
 	{
-		m_rb.velocity = new Vector2(m_rb.velocity.x, initSpeed);
+		m_body.Velocity = new Vector2(m_body.Velocity.x, initSpeed);
 	}
 	public void JumpToHeight(float height)
 	{
-		var speed = Mathf.Sqrt(-2.0f * Physics2D.gravity.y * height);
+		var speed = Mathf.Sqrt(-2.0f * m_body.Gravity.y * height);
 		this.Jump(speed);
 	}
 
 	private void FixedUpdate()
 	{
-		var vel = m_rb.velocity;
+		var vel = m_body.Velocity;
 
-		// ·½ÏòÒ»ÖÂÊ±, Ä¿±êËÙ¶È´óÓÚµ±Ç°ËÙ¶ÈÊ±Îª¼ÓËÙ
-		// ·½Ïò²»Ò»ÖÂÊ±Îª¼õËÙ
+		// æ–¹å‘ä¸€è‡´æ—¶, ç›®æ ‡é€Ÿåº¦å¤§äºŽå½“å‰é€Ÿåº¦æ—¶ä¸ºåŠ é€Ÿ
+		// æ–¹å‘ä¸ä¸€è‡´æ—¶ä¸ºå‡é€Ÿ
 		var speedDir = Mathf.Approximately(vel.x, 0) ? 0 : Mathf.Sign(vel.x);
-		var acc = speedDir == this.Toward && Mathf.Abs(m_speed - vel.x) > 0 ?
+		var acc = speedDir == this.Toward && Mathf.Abs(m_targetSpeed - vel.x) > 0 ?
 			m_acc : m_dec;
 
-		// ¸üÐÂËÙ¶È
-		vel.x = Mathf.MoveTowards(vel.x, m_speed, acc * Time.fixedDeltaTime);
-		m_rb.velocity = vel;
+		var targetSpeed = m_targetSpeed;
+
+		if (m_body.CollidedInfo.BottomContact == null)
+		{
+			targetSpeed *= m_midairSpeedFactor;
+			acc *= m_midairDragFactor;
+		}
+
+		// æ›´æ–°é€Ÿåº¦
+		vel.x = Mathf.MoveTowards(vel.x, targetSpeed, acc * Time.fixedDeltaTime);
+		m_body.Velocity = vel;
 	}
 
 	public void RequireCommponent()
 	{
-		m_rb = this.GetComponent<Rigidbody2D>();
+		m_body = this.GetComponent<PawnPhysicsBody>();
 	}
 
 #if UNITY_EDITOR
 	private void Reset()
-	{
+	{	
+		m_midairDragFactor = 1.0f;
+		m_midairSpeedFactor = 1.0f;
+
 		this.RequireCommponent();
 	}
 #endif

@@ -123,6 +123,24 @@ public static class DebugUtils
 	}
 
 	[Conditional("UNITY_EDITOR")]
+	public static void DrawGridLines(Vector3 pos, Vector2 cellSize, Vector2Int gridSize, DrawParam? args = null)
+	{
+		for (int i = 0; i <= gridSize.x; i++)
+		{
+			var start = pos + new Vector3(i * cellSize.x, 0, 0);
+			var end = pos + new Vector3(i * cellSize.y, gridSize.y * cellSize.y, 0);
+			DebugUtils.DrawLine(start, end, args);
+		}
+
+		for (int i = 0; i <= gridSize.y; i++)
+		{
+			var start = pos + new Vector3(0, i * cellSize.y, 0);
+			var end = pos + new Vector3(gridSize.x * cellSize.x, i * cellSize.y, 0);
+			DebugUtils.DrawLine(start, end, args);
+		}
+	}
+
+	[Conditional("UNITY_EDITOR")]
 	public static void DrawBox(Vector2 pos, Vector2 size, float angle = 0, DrawParam? args = null)
 	{
 		float w = size.x * 0.5f;

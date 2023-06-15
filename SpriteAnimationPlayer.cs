@@ -77,9 +77,21 @@ public class SpriteAnimationPlayer : MonoBehaviour
 		get => m_renderer; 
 	}
 
-	public bool IsFinished 
+	public bool IsFinished
 	{
 		get => this.State == PlayState.Finish; 
+	}
+
+	public bool ToEnd
+	{
+		get
+		{
+			if (m_anim != null && m_anim.TryGetKeyframe(m_anim.KeyframeCount-1, out var last))
+			{
+				return m_curKeyframeIndex == m_anim.KeyframeCount - 1 && m_frameCounter == last.length - 1;
+			}
+			return false;
+		}
 	}
 
 	public int CurKeyframeIndex 
@@ -150,52 +162,55 @@ public class SpriteAnimationPlayer : MonoBehaviour
 
 	private void UpdateFrame(float dt)
 	{
-		// 一帧最小持续的时间
-		float interval = m_anim.FrameDeltaTime;
-
-		// 用abs避免倒放时timer为负数
-		if (Mathf.Abs(m_timer) >= interval)
+		if (m_anim != null && m_anim.TryGetKeyframe(0, out _))
 		{
-			// 计算递进帧数
-			int skip = Mathf.RoundToInt(m_timer / interval);
+			// 一帧最小持续的时间
+			float interval = m_anim.FrameDeltaTime;
 
-			// 递进帧数
-			m_frameCounter += Mathf.Abs(skip);
-
-			// 递进方向
-			int dir = (int)Mathf.Sign(skip);
-
-			// 剔除计时器中完整的帧时间
-			m_timer -= skip * interval;
-
-			// 检查帧数是否超过当前的关键帧长度
-			var keyframe = this.CurKeyframe.Value;
-			while (m_frameCounter >= keyframe.length)
+			// 用abs避免倒放时timer为负数
+			if (Mathf.Abs(m_timer) >= interval)
 			{
-				int last_index = dir > 0 ? m_anim.KeyframeCount - 1 : 0;
-				if (m_curKeyframeIndex == last_index && !m_loop)
-				{
-					// 停止播放
-					this.State = PlayState.Finish;
+				// 计算递进帧数
+				int skip = Mathf.RoundToInt(m_timer / interval);
 
-					break;
+				// 递进帧数
+				m_frameCounter += Mathf.Abs(skip);
+
+				// 递进方向
+				int dir = (int)Mathf.Sign(skip);
+
+				// 剔除计时器中完整的帧时间
+				m_timer -= skip * interval;
+
+				// 检查帧数是否超过当前的关键帧长度
+				var keyframe = this.CurKeyframe.Value;
+				while (m_frameCounter >= keyframe.length)
+				{
+					int last_index = dir > 0 ? m_anim.KeyframeCount - 1 : 0;
+					if (m_curKeyframeIndex == last_index && !m_loop)
+					{
+						// 停止播放
+						this.State = PlayState.Finish;
+
+						break;
+					}
+					else
+					{
+						// 剔除关键帧残留的帧数
+						m_frameCounter -= keyframe.length;
+						// 递进关键帧
+						m_curKeyframeIndex = MathUtils.LoopIndex(m_curKeyframeIndex, m_anim.KeyframeCount, dir);
+					}
 				}
-				else
-				{ 
-					// 剔除关键帧残留的帧数
-					m_frameCounter -= keyframe.length;
-					// 递进关键帧
-					m_curKeyframeIndex = MathUtils.LoopIndex(m_curKeyframeIndex, m_anim.KeyframeCount, dir);
-				}
+
+				// 更新当前关键帧对应的精灵
+				m_anim.TryGetKeyframe(m_curKeyframeIndex, out var kf);
+				m_renderer.sprite = kf.sprite;
 			}
 
-			// 更新当前关键帧对应的精灵
-			m_anim.TryGetKeyframe(m_curKeyframeIndex, out var kf);
-			m_renderer.sprite = kf.sprite;
+			// 更新计时器
+			m_timer += this.Speed * dt;
 		}
-
-		// 更新计时器
-		m_timer += this.Speed * dt;
 	}
 
 	private void Awake()
@@ -208,7 +223,7 @@ public class SpriteAnimationPlayer : MonoBehaviour
 
 	private void Update()
 	{
-		if (this.State == PlayState.Play && m_anim != null && m_anim.TryGetKeyframe(0, out _))
+		if (this.State == PlayState.Play)
 		{
 			this.UpdateFrame(Time.deltaTime);
 		}
@@ -217,13 +232,16 @@ public class SpriteAnimationPlayer : MonoBehaviour
 #if UNITY_EDITOR
 	public void CreateAnimFromSelectedSprites()
 	{
-		var sps = MiscUtils.GetSelectedObjectByOrder<Sprite>();
-		var asset = SpriteAnimation.CreateFromeSprites(sps, 24);
-
-		var path = UnityEditor.EditorUtility.SaveFilePanelInProject("Create", "new sequence", "asset", "");
+		var path = UnityEditor.EditorUtility.SaveFilePanelInProject("Create", "new SpriteAnimation", "asset", "");
 		if (!string.IsNullOrEmpty(path))
 		{
-			
+			var selectedSprites = MiscUtils.GetSelectedObjectByOrder<Sprite>();
+			var asset = ScriptableObject.CreateInstance<SpriteAnimation>();
+
+			asset.SetKeyframe(selectedSprites.Process((Sprite sp) => new SpriteAnimation.Keyframe(sp)));
+
+			UnityEditor.AssetDatabase.CreateAsset(asset, path);
+			UnityEditor.AssetDatabase.SaveAssets();
 		}
 	}
 
@@ -234,6 +252,8 @@ public class SpriteAnimationPlayer : MonoBehaviour
 
 	private void OnValidate()
 	{
+		if (m_renderer == null) return;
+
 		if (m_anim != null && m_anim.TryGetKeyframe(0, out var kf))
 			m_renderer.sprite = kf.sprite;
 		else

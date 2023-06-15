@@ -3,6 +3,50 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
+//public class SelectedListContext<T>
+//	where T : UnityEngine.Object
+//{
+//	[System.Serializable]
+//	private struct Data
+//	{
+//		public List<T> list;
+//	}
+
+//	public List<T> target;
+
+//	private Vector2 m_scrollPos;
+
+//	public void ListScrollView(string tile = null, params GUILayoutOption[] options)
+//	{
+//		if (!string.IsNullOrEmpty(tile))
+//		{
+//			var style = EditorStyles.boldLabel;
+//			style.richText = true;
+
+//			GUILayout.Label(tile + $" ({this.target.Count})", style);
+//		}
+
+//		m_scrollPos = GUILayout.BeginScrollView(m_scrollPos, options);
+//		for (int i = 0; i < target.Count; i++)
+//		{
+//			var obj = target[i];
+//			if (obj == null)
+//				this.target.RemoveAt(i);
+//			else
+//			{
+//				var ret = EditorGUILayout.ObjectField("", obj, typeof(T), true);
+//				this.target[i] = ret as T;
+//			}				
+//		}
+//		GUILayout.EndScrollView();
+//	}
+
+//	public void Shortcuts()
+//	{ 
+		
+//	}
+//}
+
 public class PositionAlignmentTool
 {
 	private bool m_alignX = false;
