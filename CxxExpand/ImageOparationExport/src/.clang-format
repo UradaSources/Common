@@ -1,0 +1,9 @@
+---
+BasedOnStyle: Microsoft
+ConstructorInitializerAllOnOneLineOrOnePerLine: 'true'
+AllowAllConstructorInitializersOnNextLine : 'false'
+AllowShortBlocksOnASingleLine: 'true'
+AllowShortFunctionsOnASingleLine: InlineOnly
+AllowShortLambdasOnASingleLine: Empty
+AllowShortLoopsOnASingleLine: 'true'
+...
