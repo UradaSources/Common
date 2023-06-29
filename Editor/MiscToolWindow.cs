@@ -25,9 +25,9 @@ public class MiscToolWindow : EditorWindow
 			if (!string.IsNullOrEmpty(path))
 			{
 				var selectedSprites = MiscUtils.GetSelectedObjectByOrder<Sprite>();
-				var asset = ScriptableObject.CreateInstance<SpriteAnimation>();
+				var asset = ScriptableObject.CreateInstance<KeyframeSequence>();
 
-				asset.SetKeyframe(selectedSprites.Process((Sprite sp)=>new SpriteAnimation.Keyframe(sp)));
+				asset.SetKeyframe(selectedSprites.Process((Sprite sp)=>new KeyframeSequence.Keyframe(sp)));
 
 				AssetDatabase.CreateAsset(asset, path);
 				AssetDatabase.SaveAssets();
