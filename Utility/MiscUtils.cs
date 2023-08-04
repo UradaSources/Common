@@ -15,6 +15,15 @@ public static class MiscUtils
 	public static bool InLayer(this GameObject go, LayerMask layermask)
 		=> layermask == (layermask | (1 << go.layer));
 
+	// 获取临近层级的兄弟项
+	public static Transform GetSibling(this Transform tr, int indexOffset, bool loopIndex = false)
+	{
+		var index = tr.GetSiblingIndex() + indexOffset;
+		if (loopIndex) index %= tr.parent.childCount;
+
+		return tr.parent.GetChild(index);
+	}
+
 	public static void RequiredComponent<ComT>(Component obj, out ComT com)
 		where ComT : Component
 	{
@@ -39,7 +48,8 @@ public static class MiscUtils
 		return Random.value > 0.5f;
 	}
 
-	public static int AddDistinct<T>(ref List<T> dst, IEnumerable<T> src)
+	// 不重复的向列表添加项
+	public static int Intersection<T>(ref List<T> dst, IEnumerable<T> src)
 	{
 		int count = dst.Count;
 		foreach (var v in src)
@@ -111,22 +121,6 @@ public static class MiscUtils
 	{
 		foreach (var i in src)
 			yield return new Vector3(i.x, i.y, z);
-	}
-
-	public static string Connect(string space, params string[] args)
-	{
-		if (args.Length == 0) return "";
-		if (args.Length == 1) return args[0];
-
-		string result = "";
-		for (int i = 0; i < args.Length - 1; i++)
-		{
-			if (!string.IsNullOrEmpty(args[i]))
-				result += args[i] + space;
-		}
-		result += args[args.Length - 1];
-
-		return result;
 	}
 
 	public static Sprite CreateSprite(Texture2D tex, int pixelsPerUnit)
@@ -246,11 +240,11 @@ public static class MiscUtils
 		return str;
 	}
 
-	public static string ListConcat<T>(IList<T> src, string separator = "")
+	public static string ListConcat<T>(IList<T> src, string separator = "", int maxLength = 1000)
 	{
 		var buffer = new System.Text.StringBuilder();
 
-		for (int i = 0; i < src.Count; i++)
+		for (int i = 0; i < Mathf.Min(src.Count, maxLength); i++)
 		{
 			if (i > 0)
 				buffer.Append(separator);

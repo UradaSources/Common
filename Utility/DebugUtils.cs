@@ -9,13 +9,15 @@ using UnityEditor;
 
 public struct DrawParam
 {
-	public static readonly DrawParam Default = new DrawParam
-	{
+	public static readonly DrawParam Default = new DrawParam {
 		size = 0.1f,
 		color = Color.white,
 		duration = 0.0f,
 		deepTest = false,
 	};
+
+	public static DrawParam Colour(Color c)
+		=> new DrawParam(color: c);
 
 	public float size;
 	public Color color;
@@ -120,24 +122,6 @@ public static class DebugUtils
 
 		if (isClosed)
 			DebugUtils.DrawLine(previous, first, args);
-	}
-
-	[Conditional("UNITY_EDITOR")]
-	public static void DrawGridLines(Vector3 pos, Vector2 cellSize, Vector2Int gridSize, DrawParam? args = null)
-	{
-		for (int i = 0; i <= gridSize.x; i++)
-		{
-			var start = pos + new Vector3(i * cellSize.x, 0, 0);
-			var end = pos + new Vector3(i * cellSize.y, gridSize.y * cellSize.y, 0);
-			DebugUtils.DrawLine(start, end, args);
-		}
-
-		for (int i = 0; i <= gridSize.y; i++)
-		{
-			var start = pos + new Vector3(0, i * cellSize.y, 0);
-			var end = pos + new Vector3(gridSize.x * cellSize.x, i * cellSize.y, 0);
-			DebugUtils.DrawLine(start, end, args);
-		}
 	}
 
 	[Conditional("UNITY_EDITOR")]

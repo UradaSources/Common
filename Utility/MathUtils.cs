@@ -1,50 +1,57 @@
 using System.Collections.Generic;
 using System.Collections;
 using UnityEngine;
+using Codice.CM.Common.Serialization.Replication;
 
 public static class MathUtils
 {
-	public static Vector3 SetValue(this ref Vector3 basic, float? x = null, float? y = null, float? z = null)
+	// 无视pivot计算当前RectTransform在父RectTransform中的位置
+	// 注意, 此值将会受到锚点的影响, 视锚点为计算的中心点
+	public static void CalculateMaxMin(this RectTransform tr, out Vector2 max, out Vector2 min, out Vector2 center)
 	{
-		if (x.HasValue) basic.x = x.Value;
-		if (y.HasValue) basic.y = y.Value;
-		if (z.HasValue) basic.z = z.Value;
-		return basic;
-	}
-	public static Vector3 SetValue(this ref Vector3 basic, Vector2 v, float? z = null)
-	{
-		basic.x = v.x;
-		basic.y = v.y;
-		if (z.HasValue) basic.z = z.Value;
-		return basic;
-	}
+		Debug.Assert(tr.anchorMax == tr.anchorMin, $"{tr.name}");
 
-	public static Vector3 SetValue(Vector3 basic, float? x = null, float? y = null, float? z = null)
-		=> SetValue(ref basic, x, y, z);
-	public static Vector3 SetValue(Vector3 basic, Vector2 v, float? z = null)
-		=> SetValue(ref basic, v, z);
+		var halfSizeDelta = tr.sizeDelta * 0.5f;
 
-	public static Vector2 SetValue(this ref Vector2 basic, float? x = null, float? y = null)
-	{
-		if (x.HasValue) basic.x = x.Value;
-		if (y.HasValue) basic.y = y.Value;
-		return basic;
-	}
-	public static Vector2 SetValue(Vector2 basic, float? x = null, float? y = null)
-		=> SetValue(basic, x, y);
+		float x = Mathf.Lerp(-1, 1, tr.pivot.x) * halfSizeDelta.x;
+		float y = Mathf.Lerp(-1, 1, tr.pivot.y) * halfSizeDelta.y;
 
-	public static Vector3 ToVec3(this Vector2 basic, float z)
-	{
-		return new Vector3(basic.x, basic.y, z);
+		var pivotOffset = new Vector2(x, y);
+		center = tr.anchoredPosition - pivotOffset;
+		max = center + halfSizeDelta;
+		min = center - halfSizeDelta;
 	}
 
-	public static int VaildIndex(int index, int length)
-	{
-		index %= length;
-		if (index < 0) index += length;
+	public static bool Gt(this Vector2 v1, Vector2 v2)
+		=> v1.x > v2.x && v1.y > v2.y;
+	public static bool Lt(this Vector2 v1, Vector2 v2)
+		=> v1.x < v2.x && v1.y < v2.y;
 
-		return index;
-	}
+	public static bool GtOrEq(this Vector2 v1, Vector2 v2)
+		=> v1.x >= v2.x && v1.y >= v2.y;
+	public static bool LtOrEq(this Vector2 v1, Vector2 v2)
+		=> v1.x <= v2.x && v1.y <= v2.y;
+
+	public static bool Gt(this Vector3 v1, Vector3 v2)
+		=> v1.x > v2.x && v1.y > v2.y && v1.z > v2.z;
+	public static bool Lt(this Vector3 v1, Vector3 v2)
+		=> v1.x < v2.x && v1.y < v2.y && v1.z < v2.z;
+
+	public static bool GtOrEq(this Vector3 v1, Vector3 v2)
+		=> v1.x >= v2.x && v1.y >= v2.y && v1.z >= v2.z;
+	public static bool LtOrEq(this Vector3 v1, Vector3 v2)
+		=> v1.x <= v2.x && v1.y <= v2.y && v1.z <= v2.z;
+
+	public static void SetValue(this ref Vector3 vec, float? x = null, float? y = null, float? z = null)
+		=> vec.Set(x ?? vec.x, y ?? vec.y, z ?? vec.z);
+	public static void SetValue(this ref Vector3 vec, Vector2 v, float? z = null)
+		=> vec.Set(v.x, v.y, z ?? vec.z);
+
+	public static void SetValue(this ref Vector2 vec, float? x = null, float? y = null)
+		=> vec.Set(x ?? vec.x, y ?? vec.y);
+
+	public static Vector3 ToVec3(this Vector2 vec, float z)
+		=> new Vector3(vec.x, vec.y, z);
 
 	// 斜距式
 	public static Vector2 Point(float x, float k, float b)
@@ -93,7 +100,7 @@ public static class MathUtils
 		return v;
 	}
 
-	public static float Loop(float v, float max, float min)
+	public static float LoopValue(float v, float max, float min)
 	{
 		if (v < min)
 		{
@@ -107,15 +114,13 @@ public static class MathUtils
 		}
 		else return v;
 	}
-	public static float Loop(float v, float max)
-		=> Loop(v, max, 0);
+	public static float LoopValue(float v, float max)
+		=> LoopValue(v, max, 0);
 
-	public static int LoopIndex(int i, int length, int step = 1)
+	public static int LoopIndex(int i, int length, int step = 0)
 	{
 		i += step;
-
 		if (i < 0) i = length + (i % length);
-
 		return i % length;
 	}
 

@@ -14,6 +14,12 @@ public class PawnTester : MonoBehaviour
 	private float m_speed;
 
 	[SerializeField]
+	private float m_acc;
+
+	[SerializeField]
+	private float m_dec;
+
+	[SerializeField]
 	private float m_jumpHeight;
 
 	private void Update()
@@ -21,7 +27,7 @@ public class PawnTester : MonoBehaviour
 		var dir = Input.GetAxisRaw("Horizontal");
 		var targetSpeed = dir * m_speed;
 
-		m_motion.MoveTowards(targetSpeed);
+		m_motion.MoveTowards(targetSpeed, m_acc, m_dec);
 
 		if (Input.GetKeyDown(KeyCode.Space))
 			m_motion.JumpToHeight(m_jumpHeight);
