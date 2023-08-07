@@ -7,17 +7,17 @@ public static class MathUtils
 {
 	// 无视pivot计算当前RectTransform在父RectTransform中的位置
 	// 注意, 此值将会受到锚点的影响, 视锚点为计算的中心点
-	public static void CalculateMaxMin(this RectTransform tr, out Vector2 max, out Vector2 min, out Vector2 center)
+	public static void CalculateMaxMin(this RectTransform tr, out Vector2 max, out Vector2 min) // , out Vector2 center
 	{
 		Debug.Assert(tr.anchorMax == tr.anchorMin, $"{tr.name}");
 
 		var halfSizeDelta = tr.sizeDelta * 0.5f;
 
-		float x = Mathf.Lerp(-1, 1, tr.pivot.x) * halfSizeDelta.x;
-		float y = Mathf.Lerp(-1, 1, tr.pivot.y) * halfSizeDelta.y;
+		//float x = Mathf.Lerp(-1, 1, tr.pivot.x) * halfSizeDelta.x;
+		//float y = Mathf.Lerp(-1, 1, tr.pivot.y) * halfSizeDelta.y;
 
-		var pivotOffset = new Vector2(x, y);
-		center = tr.anchoredPosition - pivotOffset;
+		// var pivotOffset = new Vector2(x, y);
+		var center = (Vector2)tr.localPosition; // tr.anchoredPosition - pivotOffset;
 		max = center + halfSizeDelta;
 		min = center - halfSizeDelta;
 	}

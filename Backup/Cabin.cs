@@ -26,7 +26,7 @@ public class Cabin : MonoBehaviour
 	private void OnDrawGizmosSelected()
 	{
 		var pos = this.transform.position;
-		DebugUtils.DrawGridLines(pos, Vector2Int.one, this.CellSize, new DrawParam(color: Color.gray));
+		// DebugUtils.(pos, Vector2Int.one, this.CellSize, new DrawParam(color: Color.gray));
 	}
 
 	private void OnValidate()
