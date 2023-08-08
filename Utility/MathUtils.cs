@@ -22,6 +22,30 @@ public static class MathUtils
 		min = center - halfSizeDelta;
 	}
 
+	// 计算射线所在直线与矩形相交信息
+	// 返回交点与origin距离, tmax, tmin
+	// 检查射线相交情况时使用 tmax >= Mathf.Max(tmin, 0)
+	// 获取命中点时
+	// var hitPoint = origin + ray * Mathf.Max(tmin, 0.0f);
+	public static (float, float) IntersectRay(Rect b, Vector2 origin, Vector2 dir)
+	{
+		var norInv = new Vector2(1.0f / dir.x, 1.0f / dir.y);
+
+		float tx1 = (b.min.x - origin.x) * norInv.x;
+		float tx2 = (b.max.x - origin.x) * norInv.x;
+
+		float tmin = Mathf.Min(tx1, tx2);
+		float tmax = Mathf.Max(tx1, tx2);
+
+		float ty1 = (b.min.y - origin.y) * norInv.y;
+		float ty2 = (b.max.y - origin.y) * norInv.y;
+
+		tmin = Mathf.Max(tmin, Mathf.Min(ty1, ty2));
+		tmax = Mathf.Min(tmax, Mathf.Max(ty1, ty2));
+
+		return (tmax, tmin);
+	}
+
 	public static bool Gt(this Vector2 v1, Vector2 v2)
 		=> v1.x > v2.x && v1.y > v2.y;
 	public static bool Lt(this Vector2 v1, Vector2 v2)
