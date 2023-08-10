@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Collections;
 using UnityEngine;
 using Codice.CM.Common.Serialization.Replication;
+using System;
 
 public static class MathUtils
 {
@@ -20,6 +21,31 @@ public static class MathUtils
 		var center = (Vector2)tr.localPosition; // tr.anchoredPosition - pivotOffset;
 		max = center + halfSizeDelta;
 		min = center - halfSizeDelta;
+	}
+
+	public static bool SameSign(float v1, float v2)
+	{
+		var t = v1 * v2;
+		// Approximately用于排除误差造成的极小值的情况
+		return t > 0 && !Mathf.Approximately(t, 0);
+	}
+
+	// 计算在一个循环范围中值的最小间隔
+	// 符号代表方向, 返回值以绝对值大小排序
+	public static (float max, float min) LoopValueMinSpace(float from, float to, float end, float start = 0)
+	{
+		if (Mathf.Approximately(from, to))
+			return (end - start, 0);
+
+		float d1 = to - from;
+		float d2;
+
+		if (to > from)
+			d2 = to - end + start - from;
+		else
+			d2 = to - start + end - from;
+
+		return Mathf.Abs(d1) > Mathf.Abs(d2) ? (d1, d2) : (d2, d1);
 	}
 
 	// 计算射线所在直线与矩形相交信息
@@ -46,6 +72,13 @@ public static class MathUtils
 		return (tmax, tmin);
 	}
 
+	// 归一化的波峰函数
+	// 顶点在(0.5f, 1.0f), 开口向下
+	public static float NorPeakWave(float x)
+		=> -4.0f * Mathf.Pow((x - 0.5f), 2) + 1.0f;
+
+	// 比较vec2的值
+	// 只有2个值均op对方时才返回true
 	public static bool Gt(this Vector2 v1, Vector2 v2)
 		=> v1.x > v2.x && v1.y > v2.y;
 	public static bool Lt(this Vector2 v1, Vector2 v2)
@@ -66,13 +99,13 @@ public static class MathUtils
 	public static bool LtOrEq(this Vector3 v1, Vector3 v2)
 		=> v1.x <= v2.x && v1.y <= v2.y && v1.z <= v2.z;
 
-	public static void SetValue(this ref Vector3 vec, float? x = null, float? y = null, float? z = null)
-		=> vec.Set(x ?? vec.x, y ?? vec.y, z ?? vec.z);
-	public static void SetValue(this ref Vector3 vec, Vector2 v, float? z = null)
-		=> vec.Set(v.x, v.y, z ?? vec.z);
+	//public static void SetValue(this ref Vector3 vec, float? x = null, float? y = null, float? z = null)
+	//	=> vec.Set(x ?? vec.x, y ?? vec.y, z ?? vec.z);
+	//public static void SetValue(this ref Vector3 vec, Vector2 v, float? z = null)
+	//	=> vec.Set(v.x, v.y, z ?? vec.z);
 
-	public static void SetValue(this ref Vector2 vec, float? x = null, float? y = null)
-		=> vec.Set(x ?? vec.x, y ?? vec.y);
+	//public static void SetValue(this ref Vector2 vec, float? x = null, float? y = null)
+	//	=> vec.Set(x ?? vec.x, y ?? vec.y);
 
 	public static Vector3 ToVec3(this Vector2 vec, float z)
 		=> new Vector3(vec.x, vec.y, z);
