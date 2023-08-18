@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using System.Collections;
 using UnityEngine;
-using Codice.CM.Common.Serialization.Replication;
-using System;
 
 public static class MathUtils
 {
@@ -32,6 +30,7 @@ public static class MathUtils
 
 	// 计算在一个循环范围中值的最小间隔
 	// 符号代表方向, 返回值以绝对值大小排序
+	// 必须确保from和to在[start, end]内
 	public static (float max, float min) LoopValueMinSpace(float from, float to, float end, float start = 0)
 	{
 		if (Mathf.Approximately(from, to))

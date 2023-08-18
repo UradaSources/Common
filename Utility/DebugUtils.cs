@@ -38,6 +38,7 @@ public static class DebugUtils
 	[Conditional("UNITY_EDITOR")]
 	public static void DrawMark(Vector3 pos, DrawParam? args = null)
 	{
+#if UNITY_EDITOR
 		var param = args ?? DrawParam.Default;
 
 		// 根据当前编辑器视图缩放比例来计算尺寸
@@ -51,11 +52,13 @@ public static class DebugUtils
 		DebugUtils.DrawLine(pos - xOffset, pos + xOffset, args);
 		DebugUtils.DrawLine(pos - yOffset, pos + yOffset, args);
 		DebugUtils.DrawLine(pos - zOffset, pos + zOffset, args);
+#endif
 	}
 
 	[Conditional("UNITY_EDITOR")]
 	public static void DrawArrow(Vector3 pos, Vector3 vec, DrawParam? args = null)
 	{
+#if UNITY_EDITOR
 		const float ArrowHeadAngle = 15.0f;
 
 		var param = args ?? DrawParam.Default;
@@ -73,6 +76,7 @@ public static class DebugUtils
 
 		DebugUtils.DrawRay(pos + vec, left * param.size, args);
 		DebugUtils.DrawRay(pos + vec, right * param.size, args);
+#endif
 	}
 
 	[Conditional("UNITY_EDITOR")]

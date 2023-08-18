@@ -390,6 +390,25 @@ public static class MiscUtils
 	}
 
 #if UNITY_EDITOR
+	public static float GizmoScale(Vector3 position, Camera camera)
+	{
+		position = Gizmos.matrix.MultiplyPoint(position);
+		if (camera)
+		{
+			Transform transform = camera.transform;
+			Vector3 position2 = transform.position;
+			float z = Vector3.Dot(position - position2, transform.TransformDirection(new Vector3(0f, 0f, 1f)));
+			Vector3 a = camera.WorldToScreenPoint(position2 + transform.TransformDirection(new Vector3(0f, 0f, z)));
+			Vector3 b = camera.WorldToScreenPoint(position2 + transform.TransformDirection(new Vector3(1f, 0f, z)));
+			float magnitude = (a - b).magnitude;
+			return 80f / Mathf.Max(magnitude, 0.0001f);
+		}
+
+		return 20f;
+	}
+	public static float EditorGizmoScale(Vector3 position)
+		=> GizmoScale(position, SceneView.currentDrawingSceneView.camera);
+
 	// 按顺序获取被选中的GameObject
 	public static IEnumerable<GameObject> GetSelectedGameObjectsByOrder(bool inScene = true, System.Func<GameObject, bool> filter = null)
 	{
@@ -445,25 +464,6 @@ public static class MiscUtils
 				yield return go;
 		}
 	}
-
-	public static float GizmoScale(Vector3 position, Camera camera)
-	{
-		position = Gizmos.matrix.MultiplyPoint(position);
-		if (camera)
-		{
-			Transform transform = camera.transform;
-			Vector3 position2 = transform.position;
-			float z = Vector3.Dot(position - position2, transform.TransformDirection(new Vector3(0f, 0f, 1f)));
-			Vector3 a = camera.WorldToScreenPoint(position2 + transform.TransformDirection(new Vector3(0f, 0f, z)));
-			Vector3 b = camera.WorldToScreenPoint(position2 + transform.TransformDirection(new Vector3(1f, 0f, z)));
-			float magnitude = (a - b).magnitude;
-			return 80f / Mathf.Max(magnitude, 0.0001f);
-		}
-
-		return 20f;
-	}
-	public static float EditorGizmoScale(Vector3 position)
-		=> GizmoScale(position, SceneView.lastActiveSceneView.camera);
 	
 	// 绘制纹理
 	public static void GUIDrawTexture(Sprite sprite, float height, float? x_offset = null)
