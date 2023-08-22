@@ -407,7 +407,14 @@ public static class MiscUtils
 		return 20f;
 	}
 	public static float EditorGizmoScale(Vector3 position)
-		=> GizmoScale(position, SceneView.currentDrawingSceneView.camera);
+	{
+		Camera camera;
+		if (SceneView.lastActiveSceneView)
+			camera = SceneView.lastActiveSceneView.camera;
+		else
+			camera = Camera.main;
+		return GizmoScale(position, camera);
+	}
 
 	// 按顺序获取被选中的GameObject
 	public static IEnumerable<GameObject> GetSelectedGameObjectsByOrder(bool inScene = true, System.Func<GameObject, bool> filter = null)

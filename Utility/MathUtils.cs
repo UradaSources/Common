@@ -31,7 +31,7 @@ public static class MathUtils
 	// 计算在一个循环范围中值的最小间隔
 	// 符号代表方向, 返回值以绝对值大小排序
 	// 必须确保from和to在[start, end]内
-	public static (float max, float min) LoopValueMinSpace(float from, float to, float end, float start = 0)
+	public static (float max, float min) LoopValueInterval(float from, float to, float end, float start = 0)
 	{
 		if (Mathf.Approximately(from, to))
 			return (end - start, 0);
@@ -71,10 +71,15 @@ public static class MathUtils
 		return (tmax, tmin);
 	}
 
-	// 归一化的波峰函数
+	// 波峰函数
 	// 顶点在(0.5f, 1.0f), 开口向下
-	public static float NorPeakWave(float x)
+	public static float SinPeakWave(float x)
 		=> -4.0f * Mathf.Pow((x - 0.5f), 2) + 1.0f;
+	//public static float LinerPearWave(float x)
+	//	=> 
+
+	public static System.Func<float, float> Modulation(System.Func<float, float> basic, System.Func<float, float> ease)
+		=> (float x) => basic.Invoke(ease.Invoke(x));
 
 	// 比较vec2的值
 	// 只有2个值均op对方时才返回true
