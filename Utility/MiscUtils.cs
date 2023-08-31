@@ -408,11 +408,9 @@ public static class MiscUtils
 	}
 	public static float EditorGizmoScale(Vector3 position)
 	{
-		Camera camera;
+		Camera camera = null;
 		if (SceneView.lastActiveSceneView)
 			camera = SceneView.lastActiveSceneView.camera;
-		else
-			camera = Camera.main;
 		return GizmoScale(position, camera);
 	}
 
