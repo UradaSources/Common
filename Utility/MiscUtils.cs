@@ -10,6 +10,49 @@ public static class MiscUtils
 {
 	public static Color ClearAlpha { get => new Color(1, 1, 1, 0); }
 
+	public static bool UpdateConfig<T>(string basename, ref T configRef, bool createDefault = true, bool validityCheck = true, string path = null)
+		where T : struct
+	{
+		path = path ?? Application.streamingAssetsPath + "/config/";
+		var configFullpath = System.IO.Path.Join(path, basename + ".config");
+		try
+		{
+			if (System.IO.File.Exists(configFullpath))
+			{
+				var configText = System.IO.File.ReadAllText(configFullpath);
+				var config = JsonUtility.FromJson<T>(configText);
+				if (!validityCheck || !object.Equals(config, default(T)))
+				{
+					configRef = config;
+					return true;
+				}
+				else
+				{
+					Debug.LogWarning($"config {configFullpath} is invaild");
+					return false;
+				}
+			}
+			else if (createDefault)
+			{
+				if (!System.IO.Directory.Exists(path))
+					System.IO.Directory.CreateDirectory(path);
+
+				using var file = System.IO.File.Create(configFullpath);
+				var config = JsonUtility.ToJson(configRef);
+				file.Write(System.Text.UTF8Encoding.UTF8.GetBytes(config));
+				file.Flush();
+
+				return true;
+			}
+		}
+		catch (System.Exception exc)
+		{
+			Debug.LogWarning($"an error occurred while reading or creating the config file: {exc}");
+		}
+
+		return false;
+	}
+
 	public static bool InLayer(this GameObject go, string layer)
 		=> InLayer(go, LayerMask.GetMask(layer));
 	public static bool InLayer(this GameObject go, LayerMask layermask)

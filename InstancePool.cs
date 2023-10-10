@@ -3,19 +3,16 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [System.Serializable]
-public class InstancePool<T> where T : Component
+public class InstancePool<T>
+	where T : Component
 {
-	[SerializeField]
-	private Transform m_root;
-
-	[SerializeField]
-	private T m_template;
+	[SerializeField] private Transform m_root;
+	[SerializeField] private T m_template;
 
 	[SerializeField, HideInInspector]
 	private List<T> m_instances = new List<T>();
 
-	public int Count { get => m_instances.Count; }
-
+	public int InstanceCount => m_instances.Count;
 	public int ActivedCount
 	{
 		get
@@ -30,24 +27,31 @@ public class InstancePool<T> where T : Component
 		}
 	}
 
-	public Transform Root 
-	{
-		get => m_root; 
-	}
+	public Transform Root => m_root;
 
-	public void Resize(int size)
+	public int Resize(int size, bool defaultActiveCreated = false, bool destroy = false)
 	{
-		if (this.Count >= size) return;
-		for (int i = this.Count; i < size; i++)
+		if (this.InstanceCount <= size)
 		{
-			var obj = this.Creator(m_template, m_root);
-			m_instances.Add(obj);
+			for (int i = this.InstanceCount; i < size; i++)
+			{
+				var obj = this.Creator(m_template, m_root, defaultActiveCreated);
+				m_instances.Add(obj);
+			}
 		}
+		else if (destroy)
+		{
+			int count = this.InstanceCount - size;
+			for (int i = 0; i < count; i++)
+				Object.Destroy(m_instances[i]);
+			m_instances.RemoveRange(m_instances.Count - count, count);
+		}
+		return this.InstanceCount;
 	}
 
-	public T NewInstance(System.Action<T> beforeEnable = null)
+	public T GetOrCreate(System.Action<T> beforeEnable = null)
 	{
-		foreach(var obj in m_instances)
+		foreach (var obj in m_instances)
 		{
 			if (!obj.gameObject.activeSelf)
 			{
@@ -58,22 +62,13 @@ public class InstancePool<T> where T : Component
 			}
 		}
 
-		int newSize = Mathf.Max((int)(this.Count * 1.5f), this.Count + 2);
+		int newSize = Mathf.Max((int)(this.InstanceCount * 1.5f), this.InstanceCount + 2);
 		this.Resize(newSize);
 
-		return this.NewInstance(beforeEnable);
+		return this.GetOrCreate(beforeEnable);
 	}
 
-	public IEnumerable<T> FindInstance(System.Func<T, bool> condition)
-	{
-		foreach (var obj in m_instances)
-		{
-			if (condition.Invoke(obj))
-				yield return obj;
-		}
-	}
-
-	public IEnumerable<T> GetActivedInstance()
+	public IEnumerable<T> GetActived()
 	{
 		foreach (var obj in m_instances)
 		{
@@ -81,24 +76,60 @@ public class InstancePool<T> where T : Component
 				yield return obj;
 		}
 	}
+	public IEnumerable<T> GetFiltered(System.Func<T, bool> filter)
+	{
+		foreach (var obj in m_instances)
+		{
+			if (filter.Invoke(obj))
+				yield return obj;
+		}
+	}
 
-	public void DisableAll(System.Action<T> onReadyDisable = null)
+	public void Maintain(int num)
+	{
+		Debug.Assert(num > 0);
+		int activeCount = this.ActivedCount;
+		if (activeCount > num)
+			this.Disable(activeCount - num);
+		else
+		{
+			for (int i = 0; i< num - activeCount; i++) 
+				this.GetOrCreate();
+		}
+	}
+
+	public int Disable(int maxNum, System.Func<T, bool> filter = null, System.Action<T> beforeDisable = null)
+	{
+		int count = 0;
+		foreach (var ins in m_instances)
+		{
+			if (ins.gameObject.activeSelf && (filter == null || filter.Invoke(ins)))
+			{
+				beforeDisable?.Invoke(ins);
+				ins.gameObject.SetActive(false);
+
+				if (++count >= maxNum)
+					break;
+			}
+		}
+		return count;
+	}
+	public void DisableAll(System.Action<T> beforeDisable = null)
 	{
 		foreach (var obj in m_instances)
 		{
 			if (obj.gameObject.activeSelf)
 			{
-				onReadyDisable?.Invoke(obj);
+				beforeDisable?.Invoke(obj);
 				obj.gameObject.SetActive(false);
 			}
 		}
 	}
 
-	private T Creator(T template, Transform root)
+	private T Creator(T template, Transform root, bool defaultActiveCreated = false)
 	{
 		var obj = GameObject.Instantiate(template, root);
-		obj.gameObject.SetActive(false);
-
+		obj.gameObject.SetActive(defaultActiveCreated);
 		return obj;
 	}
 }
