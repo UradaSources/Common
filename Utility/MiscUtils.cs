@@ -10,6 +10,18 @@ public static class MiscUtils
 {
 	public static Color ClearAlpha { get => new Color(1, 1, 1, 0); }
 
+	public static bool Metronome(int frequency, float offset = 0)
+	{
+		switch (frequency)
+		{
+		case -1: return true;
+		case 0: return false;
+		}
+
+		float t = offset + Time.time;
+		return (int)(t * 2 * frequency) % 2 == 0;
+	}
+
 	public static bool UpdateConfig<T>(string basename, ref T configRef, bool createDefault = true, bool validityCheck = true, string path = null)
 		where T : struct
 	{
@@ -51,6 +63,18 @@ public static class MiscUtils
 		}
 
 		return false;
+	}
+
+	// 围绕特定的点旋转
+	// pivot为local position
+	// angle为目标localEulerAngles.z
+	public static void RotateAround(Transform tr, Vector2 pivot, float angle)
+	{
+		var curAngle = tr.localEulerAngles.z;
+		var angleDelta = Mathf.DeltaAngle(curAngle, angle);
+
+		var rotatePivot = tr.TransformPoint(pivot);
+		tr.RotateAround(rotatePivot, Vector3.forward, angleDelta);
 	}
 
 	public static bool InLayer(this GameObject go, string layer)
