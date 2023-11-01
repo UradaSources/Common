@@ -10,6 +10,17 @@ public static class MiscUtils
 {
 	public static Color ClearAlpha { get => new Color(1, 1, 1, 0); }
 
+	public static void SetPivot(this RectTransform rectTransform, Vector2 pivot)
+	{
+		Vector3 deltaPosition = rectTransform.pivot - pivot;    // get change in pivot
+		deltaPosition.Scale(rectTransform.rect.size);           // apply sizing
+		deltaPosition.Scale(rectTransform.localScale);          // apply scaling
+		deltaPosition = rectTransform.rotation * deltaPosition; // apply rotation
+
+		rectTransform.pivot = pivot;                            // change the pivot
+		rectTransform.localPosition -= deltaPosition;           // reverse the position change
+	}
+
 	public static bool Metronome(int frequency, float offset = 0)
 	{
 		switch (frequency)
@@ -75,6 +86,13 @@ public static class MiscUtils
 
 		var rotatePivot = tr.TransformPoint(pivot);
 		tr.RotateAround(rotatePivot, Vector3.forward, angleDelta);
+	}
+
+	public static void RotateAroundGlobal(Transform tr, Vector2 pivot, float angle)
+	{
+		var curAngle = tr.eulerAngles.z;
+		var angleDelta = Mathf.DeltaAngle(curAngle, angle);
+		tr.RotateAround(pivot, Vector3.forward, angleDelta);
 	}
 
 	public static bool InLayer(this GameObject go, string layer)
