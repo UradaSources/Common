@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -10,40 +9,62 @@ public static class MiscUtils
 {
 	public static Color ClearAlpha { get => new Color(1, 1, 1, 0); }
 
-	public static bool UpdateConfig<T>(string basename, ref T configRef, bool createDefault = true, bool validityCheck = true, string path = null)
-		where T : struct
+	public static bool LoadConfig<T>(string basename, T config, bool createDefault = true, string path = null)
+		where T : class
 	{
 		path = path ?? Application.streamingAssetsPath + "/config/";
-		var configFullpath = System.IO.Path.Join(path, basename + ".config");
+		var configFullpath = System.IO.Path.Combine(path, basename + ".config");
 		try
 		{
+			System.IO.Directory.CreateDirectory(path);
+
 			if (System.IO.File.Exists(configFullpath))
 			{
 				var configText = System.IO.File.ReadAllText(configFullpath);
-				var config = JsonUtility.FromJson<T>(configText);
-				if (!validityCheck || !object.Equals(config, default(T)))
-				{
-					configRef = config;
-					return true;
-				}
-				else
-				{
-					Debug.LogWarning($"config {configFullpath} is invaild");
-					return false;
-				}
+				JsonUtility.FromJsonOverwrite(configText, config);
 			}
 			else if (createDefault)
 			{
-				if (!System.IO.Directory.Exists(path))
-					System.IO.Directory.CreateDirectory(path);
-
 				using var file = System.IO.File.Create(configFullpath);
-				var config = JsonUtility.ToJson(configRef);
-				file.Write(System.Text.UTF8Encoding.UTF8.GetBytes(config));
+				var configJson = JsonUtility.ToJson(config);
+
+				// 将文本使用utf编码并写入
+				var bytes = System.Text.Encoding.UTF8.GetBytes(configJson);
+				file.Write(bytes, 0, bytes.Length);
 				file.Flush();
 
-				return true;
+				file.Close();
 			}
+
+			return true;
+		}
+		catch (System.Exception exc)
+		{
+			Debug.LogWarning($"an error occurred while reading or creating the config file: {exc}");
+		}
+
+		return false;
+	}
+	public static bool SaveConfig<T>(string basename, T configRef, string path = null)
+		where T : class
+	{
+		path = path ?? Application.streamingAssetsPath + "/config/";
+		var configFullpath = System.IO.Path.Combine(path, basename + ".config");
+		try
+		{
+			System.IO.Directory.CreateDirectory(path);
+
+			using var file = System.IO.File.Create(configFullpath);
+			var config = JsonUtility.ToJson(configRef);
+
+			// 将文本使用utf编码并写入
+			var bytes = System.Text.Encoding.UTF8.GetBytes(config);
+			file.Write(bytes, 0, bytes.Length);
+			file.Flush();
+
+			file.Close();
+
+			return true;
 		}
 		catch (System.Exception exc)
 		{
