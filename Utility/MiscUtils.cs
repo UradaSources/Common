@@ -9,6 +9,29 @@ public static class MiscUtils
 {
 	public static Color ClearAlpha { get => new Color(1, 1, 1, 0); }
 
+	public static void SetPivot(this RectTransform rectTransform, Vector2 pivot)
+	{
+		Vector3 deltaPosition = rectTransform.pivot - pivot;    // get change in pivot
+		deltaPosition.Scale(rectTransform.rect.size);           // apply sizing
+		deltaPosition.Scale(rectTransform.localScale);          // apply scaling
+		deltaPosition = rectTransform.rotation * deltaPosition; // apply rotation
+
+		rectTransform.pivot = pivot;                            // change the pivot
+		rectTransform.localPosition -= deltaPosition;           // reverse the position change
+	}
+
+	public static bool Metronome(int frequency, float offset = 0)
+	{
+		switch (frequency)
+		{
+		case -1: return true;
+		case 0: return false;
+		}
+
+		float t = offset + Time.time;
+		return (int)(t * 2 * frequency) % 2 == 0;
+	}
+
 	public static bool LoadConfig<T>(string basename, T config, bool createDefault = true, string path = null)
 		where T : class
 	{
@@ -78,6 +101,25 @@ public static class MiscUtils
 		=> InLayer(go, LayerMask.GetMask(layer));
 	public static bool InLayer(this GameObject go, LayerMask layermask)
 		=> layermask == (layermask | (1 << go.layer));
+
+	// 围绕特定的点旋转
+	// pivot为local position
+	// angle为目标localEulerAngles.z
+	public static void RotateAround(Transform tr, Vector2 pivot, float angle)
+	{
+		var curAngle = tr.localEulerAngles.z;
+		var angleDelta = Mathf.DeltaAngle(curAngle, angle);
+
+		var rotatePivot = tr.TransformPoint(pivot);
+		tr.RotateAround(rotatePivot, Vector3.forward, angleDelta);
+	}
+
+	public static void RotateAroundGlobal(Transform tr, Vector2 pivot, float angle)
+	{
+		var curAngle = tr.eulerAngles.z;
+		var angleDelta = Mathf.DeltaAngle(curAngle, angle);
+		tr.RotateAround(pivot, Vector3.forward, angleDelta);
+	}
 
 	// 获取临近层级的兄弟项
 	public static Transform GetSibling(this Transform tr, int indexOffset, bool loopIndex = false)
