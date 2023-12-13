@@ -472,6 +472,11 @@ public static class MathUtils
 		return count;
 	}
 
+	public static float AngleDiff(float from, float to)
+	{
+		return (360 + to - from) % 360;
+	}
+
 }
 
 /*
