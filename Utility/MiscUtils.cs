@@ -47,6 +47,8 @@ public static class MiscUtils
 				var configText = System.IO.File.ReadAllText(configFullpath);
 				JsonUtility.FromJsonOverwrite(configText, config);
 
+				Debug.Log($"Load config {typeof(T).Name}({configFullpath})");
+
 				return true;
 			}
 			else if (createDefault)
@@ -61,12 +63,14 @@ public static class MiscUtils
 
 				file.Close();
 
-				return true;
+				Debug.Log($"Create default config {typeof(T).Name}({configFullpath})");
+
+				return false;
 			}
 		}
 		catch (System.Exception exc)
 		{
-			Debug.LogWarning($"an error occurred while reading or creating the config file: {exc}");
+			Debug.LogWarning($"An error occurred while reading or creating the config file: {exc}. {typeof(T).Name}({configFullpath})");
 		}
 
 		return false;
