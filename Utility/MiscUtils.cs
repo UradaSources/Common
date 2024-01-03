@@ -46,6 +46,8 @@ public static class MiscUtils
 			{
 				var configText = System.IO.File.ReadAllText(configFullpath);
 				JsonUtility.FromJsonOverwrite(configText, config);
+
+				return true;
 			}
 			else if (createDefault)
 			{
@@ -58,9 +60,9 @@ public static class MiscUtils
 				file.Flush();
 
 				file.Close();
-			}
 
-			return true;
+				return true;
+			}
 		}
 		catch (System.Exception exc)
 		{
