@@ -135,7 +135,7 @@ public class CircularRangeLine : MonoBehaviour
 	{
 		if (!m_renderer)
 		{
-			MiscUtils.RequiredComponent(this, out m_renderer);
+			MiscUtils.Required(this, out m_renderer);
 
 			m_renderer.loop = true;
 			m_renderer.useWorldSpace = false;

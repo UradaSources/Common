@@ -4,14 +4,15 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
+// ·ÀÖ¹¿ìËÙµã»÷
 public class PreventQuickClicks : MonoBehaviour
 {
-	[SerializeField] private Image[] m_masks;
+	[SerializeField] private Image[] m_triggerMaskList;
 	[SerializeField] private float m_minClickInterval;
 
 	private void Awake()
 	{
-		foreach (var t in m_masks) t.raycastTarget = false;
+		foreach (var t in m_triggerMaskList) t.raycastTarget = false;
 	}
 	private IEnumerator Start()
 	{
@@ -21,24 +22,16 @@ public class PreventQuickClicks : MonoBehaviour
 		{
 			if (Input.GetMouseButtonUp(0))
 			{
-				foreach (var t in m_masks) t.raycastTarget = true;
+				foreach (var t in m_triggerMaskList) 
+					t.raycastTarget = true;
+				
 				yield return clickInterval;
-				foreach (var t in m_masks) t.raycastTarget = false;
+				
+				foreach (var t in m_triggerMaskList) 
+					t.raycastTarget = false;
 			}
 
 			yield return null;
 		}
-	}
-
-	IEnumerable<int> DcQSort(IEnumerable<int> nums)
-	{
-		if (nums.Count() < 2) return nums;
-
-		int baseValue = nums.First();
-
-		var min = nums.Skip(1).Where(t => t <= baseValue);
-		var max = nums.Skip(1).Where(t => t > baseValue);
-
-		return DcQSort(min).Append(baseValue).Concat(DcQSort(max));
 	}
 }

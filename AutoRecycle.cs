@@ -12,7 +12,7 @@ public class AutoRecycle : MonoBehaviour
 
 	[Space(10)]
 
-	[Header("Rect Range")]
+	[Header("Rect Rangef")]
 	[SerializeField] private bool m_useRectRange;
 	[SerializeField] private Vector2 m_rangeMax;
 	[SerializeField] private Vector2 m_rangeMin;
