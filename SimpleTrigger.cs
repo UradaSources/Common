@@ -27,7 +27,7 @@ public class SimpleTrigger : MonoBehaviour
 
 		public Mode mode;
 
-		[Header("Range data")]
+		[Header("Rangef data")]
 		public bool triggerWhenOutOfRange;
 		public Collider2D range;
 

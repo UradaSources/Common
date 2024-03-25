@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -10,18 +9,30 @@ public static class MiscUtils
 {
 	public static Color ClearAlpha { get => new Color(1, 1, 1, 0); }
 
+	/// <summary>
+	/// 设置rectTransform的pivot
+	/// 设置会确保rectTransform不变形
+	/// </summary>
 	public static void SetPivot(this RectTransform rectTransform, Vector2 pivot)
 	{
-		Vector3 deltaPosition = rectTransform.pivot - pivot;    // get change in pivot
-		deltaPosition.Scale(rectTransform.rect.size);           // apply sizing
-		deltaPosition.Scale(rectTransform.localScale);          // apply scaling
-		deltaPosition = rectTransform.rotation * deltaPosition; // apply rotation
+		Vector3 deltaPosition = rectTransform.pivot - pivot;
+		deltaPosition.Scale(rectTransform.rect.size);
+		deltaPosition.Scale(rectTransform.localScale);
+		deltaPosition = rectTransform.rotation * deltaPosition;
 
-		rectTransform.pivot = pivot;                            // change the pivot
-		rectTransform.localPosition -= deltaPosition;           // reverse the position change
+		rectTransform.pivot = pivot;
+		rectTransform.localPosition -= deltaPosition;
 	}
 
-	public static bool Metronome(int frequency, float offset = 0)
+	/// <summary>
+	/// 节拍器, 按frequency指示的频率返回布尔值
+	/// -1时始终返回true
+	/// 0时始终返回false
+	/// 由t设置时间基准, 一般是Time.time
+	/// </summary>
+	/// <param name="t">基准时间, 小于0时默认使用Time.time</param>
+	/// <returns></returns>
+	public static bool Metronome(int frequency, float t = -1)
 	{
 		switch (frequency)
 		{
@@ -29,32 +40,45 @@ public static class MiscUtils
 		case 0: return false;
 		}
 
-		float t = offset + Time.time;
+		if (t < 0) t = Time.time;
+
 		return (int)(t * 2 * frequency) % 2 == 0;
 	}
 
-	public static bool LoadConfig<T>(string basename, T config, bool createDefault = true, string path = null)
-		where T : class
+	/// <summary>
+	/// 尝试从<item>folderPath/basename.cfg</item>加载配置并覆盖到obj上
+	/// 加载成功时加载的配置将被覆盖到obj上并返回true
+	/// 若文件不存在且createDefaultFromInput为true则尝试使用输入的obj在该位置创建默认的配置文件
+	/// 在整个过程中出现异常时由Debug.LogError抛出错误
+	/// 最后总是返回false
+	/// 使用JsonUtility对T进行序列化/反序列化, T必须被JsonUtility支持且为class
+	/// </summary>
+	public static bool LoadConfig<T>(
+		string basename,
+		T obj,
+		bool createDefaultFromInput = true,
+		string folderPath = null) where T : class
 	{
-		path = path ?? Application.streamingAssetsPath + "/config/";
-		var configFullpath = System.IO.Path.Combine(path, basename + ".config");
+		folderPath = folderPath ?? Application.streamingAssetsPath + "/cfg/";
+		var fullpath = System.IO.Path.Combine(folderPath, basename + ".cfg");
+
 		try
 		{
-			System.IO.Directory.CreateDirectory(path);
+			System.IO.Directory.CreateDirectory(folderPath);
 
-			if (System.IO.File.Exists(configFullpath))
+			if (System.IO.File.Exists(fullpath))
 			{
-				var configText = System.IO.File.ReadAllText(configFullpath);
-				JsonUtility.FromJsonOverwrite(configText, config);
+				var configText = System.IO.File.ReadAllText(fullpath);
+				JsonUtility.FromJsonOverwrite(configText, obj);
 
-				Debug.Log($"Load config {typeof(T).Name}({configFullpath})");
+				Debug.Log($"Load config {typeof(T).Name}({fullpath})");
 
 				return true;
 			}
-			else if (createDefault)
+			else if (createDefaultFromInput)
 			{
-				using var file = System.IO.File.Create(configFullpath);
-				var configJson = JsonUtility.ToJson(config);
+				using var file = System.IO.File.Create(fullpath);
+				var configJson = JsonUtility.ToJson(obj);
 
 				// 将文本使用utf编码并写入
 				var bytes = System.Text.Encoding.UTF8.GetBytes(configJson);
@@ -63,35 +87,111 @@ public static class MiscUtils
 
 				file.Close();
 
-				Debug.Log($"Create default config {typeof(T).Name}({configFullpath})");
+				Debug.Log($"Create default config file from input {typeof(T).Name}({fullpath})");
 
 				return false;
 			}
 		}
 		catch (System.Exception exc)
 		{
-			Debug.LogWarning($"An error occurred while reading or creating the config file: {exc}. {typeof(T).Name}({configFullpath})");
+			Debug.LogError($"Load config faild: {exc}. {typeof(T).Name}({fullpath})");
 		}
 
 		return false;
 	}
-	// 围绕特定的点旋转
-	// pivot为local position
-	// angle为目标localEulerAngles.z
-	public static void RotateAround(Transform tr, Vector2 pivot, float angle)
+
+	/// <summary>
+	/// 尝试从<item>folderPath/name</item>加载配置并从result返回
+	/// 加载成功时返回result和true
+	/// 若文件不存在且createDefault为true则尝试使用输入的defaultStruct在该位置创建默认的配置文件
+	/// 在整个过程中出现异常时由Debug.LogError抛出错误
+	/// 最后总是返回defaultStruct和false
+	/// </summary>
+	public static bool LoadStruct<T>(
+		string name,
+		string folderPath,
+		out T result,
+		bool createDefault = true,
+		T defaultStruct = default) where T : struct
+	{
+		var fullpath = System.IO.Path.Combine(folderPath, name);
+		try
+		{
+			System.IO.Directory.CreateDirectory(folderPath);
+
+			if (System.IO.File.Exists(fullpath))
+			{
+				var configText = System.IO.File.ReadAllText(fullpath);
+				var loadedStruct = JsonUtility.FromJson<T>(configText);
+
+				Debug.Log($"Load struct {typeof(T).Name}({fullpath})");
+
+				result = loadedStruct;
+				return true;
+			}
+			else if (createDefault)
+			{
+				using var file = System.IO.File.Create(fullpath);
+				var configJson = JsonUtility.ToJson(defaultStruct);
+
+				// 将文本使用utf编码并写入
+				var bytes = System.Text.Encoding.UTF8.GetBytes(configJson);
+				file.Write(bytes, 0, bytes.Length);
+				file.Flush();
+
+				file.Close();
+
+				Debug.Log($"Create default struct file from default struct {typeof(T).Name}({fullpath})");
+
+				result = defaultStruct;
+				return false;
+			}
+		}
+		catch (System.Exception exc)
+		{
+			Debug.LogError($"Load struct faild: {exc}. {typeof(T).Name}({fullpath})");
+		}
+
+		result = defaultStruct;
+		return false;
+	}
+
+	/// <summary>
+	/// 围绕pivot旋转angle度
+	/// angle为目标的localEulerAngles.z
+	/// </summary>
+	public static void RotateAround(Transform tr, Vector2 pivot, float degAngle)
 	{
 		var curAngle = tr.localEulerAngles.z;
-		var angleDelta = Mathf.DeltaAngle(curAngle, angle);
+		var angleDelta = Mathf.DeltaAngle(curAngle, degAngle);
 
 		var rotatePivot = tr.TransformPoint(pivot);
 		tr.RotateAround(rotatePivot, Vector3.forward, angleDelta);
 	}
-
-	public static void RotateAroundGlobal(Transform tr, Vector2 pivot, float angle)
+	public static void RotateAroundGlobal(Transform tr, Vector2 pivot, float degAngle)
 	{
 		var curAngle = tr.eulerAngles.z;
-		var angleDelta = Mathf.DeltaAngle(curAngle, angle);
+		var angleDelta = Mathf.DeltaAngle(curAngle, degAngle);
 		tr.RotateAround(pivot, Vector3.forward, angleDelta);
+	}
+
+	/// <summary>
+	/// 无视pivot计算当前RectTransform在父RectTransform中的位置
+	/// 注意, 此值将会受到锚点的影响, 视锚点为计算的中心点
+	/// </summary>
+	public static void CalculateMaxMin(this RectTransform tr, out Vector2 max, out Vector2 min)
+	{
+		Debug.Assert(tr.anchorMax == tr.anchorMin, $"{tr.name}");
+
+		var halfSizeDelta = tr.sizeDelta * 0.5f;
+
+		//float x = Mathf.Lerp(-1, 1, tr.pivot.x) * halfSizeDelta.x;
+		//float y = Mathf.Lerp(-1, 1, tr.pivot.y) * halfSizeDelta.y;
+
+		// var pivotOffset = new Vector2(x, y);
+		var center = (Vector2)tr.localPosition; // tr.anchoredPosition - pivotOffset;
+		max = center + halfSizeDelta;
+		min = center - halfSizeDelta;
 	}
 
 	public static bool InLayer(this GameObject go, string layer)
@@ -99,27 +199,30 @@ public static class MiscUtils
 	public static bool InLayer(this GameObject go, LayerMask layermask)
 		=> layermask == (layermask | (1 << go.layer));
 
-	// 获取临近层级的兄弟项
-	public static Transform GetSibling(this Transform tr, int indexOffset, bool loopIndex = false)
-	{
-		var index = tr.GetSiblingIndex() + indexOffset;
-		if (loopIndex) index %= tr.parent.childCount;
-
-		return tr.parent.GetChild(index);
-	}
-
-	public static void RequiredComponent<ComT>(Component obj, out ComT com)
+	public static void Required<ComT>(this Component obj, out ComT com)
 		where ComT : Component
 	{
 		if (!obj.TryGetComponent(out com))
 			com = obj.gameObject.AddComponent<ComT>();
 	}
-	public static ComT RequiredComponent<ComT>(Component obj)
+	public static ComT Required<ComT>(this Component obj)
 		where ComT : Component
 	{
 		if (!obj.TryGetComponent(out ComT com))
 			com = obj.gameObject.AddComponent<ComT>();
 		return com;
+	}
+
+	/// <summary>
+	/// 从索引偏移获取同一父级下的子对象
+	/// loopIndex确保索引能进行循环
+	/// </summary>
+	public static Transform GetSiblingFromOffset(this Transform tr, int indexOffset, bool loopIndex = false)
+	{
+		var index = tr.GetSiblingIndex() + indexOffset;
+		if (loopIndex) index %= tr.parent.childCount;
+
+		return tr.parent.GetChild(index);
 	}
 
 	public static Color InvertColor(Color c)
@@ -132,89 +235,14 @@ public static class MiscUtils
 		return Random.value > 0.5f;
 	}
 
-	// 不重复的向列表添加项
-	public static int Intersection<T>(ref List<T> dst, IEnumerable<T> src)
-	{
-		int count = dst.Count;
-		foreach (var v in src)
-		{
-			if (dst.IndexOf(v) < 0)
-				dst.Add(v);
-		}
-		return dst.Count - count;
-	}
-
-	public static IEnumerable<T> ListRange<T>(IList<T> src, int index, int length)
-	{
-		Debug.Assert(index >= 0 && index < src.Count);
-
-		length = Mathf.Clamp(length, 1, src.Count - index);
-		for (int i = index; i < index + length; i++)
-			yield return src[i];
-	}
-
-	// 待修复
-	//public static IEnumerable<T> ListRange<T>(IEnumerable<T> src, int index, int length)
-	//{
-	//	Debug.Assert(index >= 0);
-
-	//	length = Mathf.Min(length, 1);
-
-	//	int i = 0;
-	//	foreach (var v in src)
-	//	{
-	//		if (i >= index)
-	//			yield return v;
-
-	//		if (++i < index + length)
-	//			yield break;
-	//	}
-	//}
-
-	public static int ConverAndAppendList<T1, T2>(ref List<T1> dst, IEnumerable<T2> src, bool allowRepeat = false)
-	{
-		int count = dst.Count;
-		foreach (var v in src)
-		{
-			if (v is T1 tv)
-			{
-				if (allowRepeat == false || dst.IndexOf(tv) < 0)
-					dst.Add(tv);
-			}
-		}
-		return dst.Count - count;
-	}
-
-	public static IEnumerable<T1> TryCast<T1, T2>(this IEnumerable<T2> src, T1 def = default)
-	{
-		foreach (var i in src)
-		{
-			if (i is T1 tv)
-				yield return tv;
-			else
-				yield return def;
-		}
-	}
-
-	public static IEnumerable<Vector2> CastToVec2(this IEnumerable<Vector3> src)
-	{
-		foreach (var i in src)
-			yield return new Vector2(i.x, i.y);
-	}
-	public static IEnumerable<Vector3> CastToVec3(this IEnumerable<Vector2> src, float z = 0)
-	{
-		foreach (var i in src)
-			yield return new Vector3(i.x, i.y, z);
-	}
-
 	public static Sprite CreateSprite(Texture2D tex, int pixelsPerUnit)
 	{
-		var rect = new Rect(position:Vector2.zero, tex.texelSize);
+		var rect = new Rect(position: Vector2.zero, tex.texelSize);
 		var pivot = new Vector2(0.5f, 0.5f);
 		return Sprite.Create(tex, rect, pivot, pixelsPerUnit);
 	}
 
-	public static Texture2D CreateTexture(int w, int h, Color? color, bool temporary = true)
+	public static Texture2D CreateTexture(int w, int h, Color? color = null, bool temporary = true)
 	{
 		color = color ?? Color.clear;
 
@@ -232,7 +260,7 @@ public static class MiscUtils
 		return tex;
 	}
 
-	public static Texture2D CreateColorTexture(Color color)
+	public static Texture2D CreateSmallColorTexture(Color color)
 		=> CreateTexture(4, 4, color, true); // 将纹理大小控制为2的幂, 虽然不是必要的
 
 	public static void GenCircleLine(LineRenderer line, float radius, Vector3? centerOffset = null, int sample = 32)
@@ -252,19 +280,16 @@ public static class MiscUtils
 		line.SetPositions(points);
 	}
 
-	// 待修复 rect.position指示左上角而不是中间
-	public static Rect GetCameraViewport(Camera camera)
-	{
-		var y = camera.orthographicSize * 2;
-		var x = y * camera.aspect;
+	//// 待修复 rect.position指示左上角而不是中间
+	//public static Rect GetCameraViewport(Camera camera)
+	//{
+	//	var y = camera.orthographicSize * 2;
+	//	var x = y * camera.aspect;
 
-		var pos = (Vector2)camera.transform.position;
+	//	var pos = (Vector2)camera.transform.position;
 
-		return new Rect(position: pos, size: new Vector2(x, y));
-	}
-
-	public static Vector2 MousePosition()
-		=> Camera.main.ScreenToWorldPoint(Input.mousePosition);
+	//	return new Rect(position: pos, size: new Vector2(x, y));
+	//}
 
 	// 在保持与目标距离的同时以forward一面朝向目标
 	public static Vector3 Alignment(Vector3 self, Vector3 target, Vector3 forward)
@@ -275,99 +300,12 @@ public static class MiscUtils
 		return target - dir * dist;
 	}
 
-	public static bool BitMaskAnd(int mask, int v)
+	public static IEnumerable<T> Foreach<T>(this IEnumerable<T> src, System.Action<T> fun)
 	{
-		return (v & mask) == v;
-	}
-	public static bool BitMaskOr(int mask, int v)
-	{
-		return (v & mask) != 0;
-	}
-
-	public static IEnumerable<T2> Process<T1, T2>(this IEnumerable<T1> src, System.Func<T1, T2> handle)
-	{
-		foreach (var i in src)
-			yield return handle.Invoke(i);
-	}
-
-	public static IEnumerable<Vector3> ExportPosition(IEnumerable<Transform> src, bool local = false)
-	{
-		foreach (var tr in src)
-			yield return local ? tr.localPosition : tr.position;
-	}
-	public static IEnumerable<Vector3> ExportPositionFromRoot(Transform root)
-	{
-		foreach (Transform tr in root)
-			yield return tr.position;
-	}
-
-	public static string FormatContainer<T>(IEnumerable<T> container, System.Func<T, string> toString = null)
-	{
-		if (toString == null) toString = (T t) => t.ToString();
-
-		bool first = false;
-
-		string str = "{";
-		foreach (T child in container)
-		{
-			if (first)
-			{
-				str += toString.Invoke(child);
-				first = false;
-			}
-			else
-			{
-				str += ", " + toString.Invoke(child);
-			}
-		}
-		str += "}";
-		return str;
-	}
-
-	public static string ListConcat<T>(IList<T> src, string separator = "", int maxLength = 1000)
-	{
-		var buffer = new System.Text.StringBuilder();
-
-		for (int i = 0; i < Mathf.Min(src.Count, maxLength); i++)
-		{
-			if (i > 0)
-				buffer.Append(separator);
-
-			buffer.Append(src[i].ToString());
-		}
-		return buffer.ToString();
-	}
-	public static string ListConcat(string separator = "", params object[] args)
-		=> ListConcat(args, separator);
-
-	public static string ListConcat<T>(IEnumerable<T> src, string separator = "")
-	{
-		var buffer = new System.Text.StringBuilder();
-
-		bool first = true;
-		foreach (var v in src)
-		{
-			if (first) 
-				first = false;
-			else
-				buffer.Append(separator);
-
-			buffer.Append(v.ToString());
-		}
-		return buffer.ToString();
-	}
-
-	public static IEnumerable<float> SampleValue(int sample, float v)
-	{
-		if (sample < 2)
-			yield return 0;
-		else
+		foreach (var item in src)
 		{ 
-			for (int i = 0; i < sample; i++)
-			{
-				float r = (float)i / (sample - 1);
-				yield return v * r;
-			}
+			fun.Invoke(item);
+			yield return item;
 		}
 	}
 
@@ -380,7 +318,7 @@ public static class MiscUtils
 		// 计算固定的视角大小
 		/* 视口锥台的高度与底边宽度
 			Camera
-				/+\ angle=fov
+				/+\ degAngle=fov
 				-+- near
 			   / + \
 			  /  +  \
@@ -427,7 +365,7 @@ public static class MiscUtils
 		// 计算固定的视角大小
 		/* 视口锥台的高度与底边宽度
 			Camera
-				/+\ angle=fov
+				/+\ degAngle=fov
 				-+- near
 			   / + \
 			  /  +  \
@@ -498,7 +436,9 @@ public static class MiscUtils
 		return GizmoScale(position, camera);
 	}
 
-	// 按顺序获取被选中的GameObject
+	/// <summary>
+	/// 按顺序获取被选中的GameObject
+	/// </summary>
 	public static IEnumerable<GameObject> GetSelectedGameObjectsByOrder(bool inScene = true, System.Func<GameObject, bool> filter = null)
 	{
 		var selected = Selection.objects;
@@ -509,7 +449,7 @@ public static class MiscUtils
 				// 检查是否是场景中的对象且通过过滤器
 				if (inScene && string.IsNullOrEmpty(go.scene.name))
 					continue;
-				if (filter != null && filter.Invoke(go))
+				if (filter != null && !filter.Invoke(go))
 					continue;
 
 				yield return go;
@@ -517,20 +457,23 @@ public static class MiscUtils
 		}
 	}
 
-	// 按顺序遍历被选中对象且尝试获取目标组件并返回
-	public static IEnumerable<T> GetSelectedComponentsByOrder<T>()
+	/// <summary>
+	/// 按顺序遍历被选中对象且尝试获取目标组件并返回
+	/// </summary>
+	public static IEnumerable<T> GetSelectedComponentsByOrder<T>(bool inScene = true)
 		where T : Component
 	{
-		var selected = Selection.objects;
-		foreach (var obj in selected)
-		{
-			if (obj is GameObject go && go.TryGetComponent(out T com))
+		foreach (var go in GetSelectedGameObjectsByOrder(inScene))
+		{ 
+			if (go.TryGetComponent(out T com))
 				yield return com;
 		}
 	}
 
-	// 按顺序获取被选中的任意对象, 必须继承自UnityEngine.Object
-	// 使用过滤器进行过滤
+	/// <summary>
+	/// 按顺序获取被选中的任意对象, 必须继承自UnityEngine.Object
+	/// 使用过滤器进行过滤
+	/// </summary>
 	public static IEnumerable<T> GetSelectedObjectByOrder<T>(System.Func<T, bool> filter = null)
 		where T : UnityEngine.Object
 	{
@@ -542,18 +485,6 @@ public static class MiscUtils
 		}
 	}
 
-	// 获取场景中被选中的GameObject
-	public static IEnumerable<GameObject> GetSelectedGameObjectInScene()
-	{
-		var selected = Selection.objects;
-		foreach (var obj in selected)
-		{
-			// 只处理场景中的对象
-			if (obj is GameObject go && !string.IsNullOrEmpty(go.scene.name))
-				yield return go;
-		}
-	}
-	
 	// 绘制纹理
 	public static void GUIDrawTexture(Sprite sprite, float height, float? x_offset = null)
 	{
@@ -647,10 +578,10 @@ public static class MiscUtils
 		}
 
 		EditorGUILayout.EndScrollView();
-	}	
-	
+	}
+
 	// 朝向编辑器视图
-	[MenuItem("MiscUtils/Towards editor view")]
+	[MenuItem("Function/MiscUtils/Towards Editor View")]
 	public static void TowardsEditorView()
 	{
 		var itor = MiscUtils.GetSelectedComponentsByOrder<Transform>();
@@ -670,30 +601,30 @@ public static class MiscUtils
 	// 不可用, 待修复
 	// 对当前选中的在编辑器中的GameObject的子对象进行反向排序
 	// [MenuItem("MiscUtils/Reverse Selected GameObjects Child")]
-	private static void ReverseSelectedChild()
-	{
-		var itor = MiscUtils.GetSelectedComponentsByOrder<Transform>();
-		var result = new List<Transform>(itor);
+	//private static void ReverseSelectedChild()
+	//{
+	//	var itor = MiscUtils.GetSelectedComponentsByOrder<Transform>();
+	//	var result = new List<Transform>(itor);
 
-		// 储存位置方便撤销
-		List<Transform> childs = new List<Transform>();
-		foreach (var tr in result)
-		{
-			foreach (Transform child in tr)
-				childs.Add(child);
-		}
-		Undo.RecordObjects(childs.ToArray(), "Spacing Spacing YAxis");
+	//	// 储存位置方便撤销
+	//	List<Transform> childs = new List<Transform>();
+	//	foreach (var tr in result)
+	//	{
+	//		foreach (Transform child in tr)
+	//			childs.Add(child);
+	//	}
+	//	Undo.RecordObjects(childs.ToArray(), "Spacing Spacing YAxis");
 
-		foreach (var tr in result)
-		{
-			for (int i = 0; i < tr.childCount; i++)
-				tr.GetChild(0).SetAsLastSibling();
-		}
-	}
+	//	foreach (var tr in result)
+	//	{
+	//		for (int i = 0; i < tr.childCount; i++)
+	//			tr.GetChild(0).SetAsLastSibling();
+	//	}
+	//}
 
 	// 编辑器快速操作
 	// 首先在选中的所有对象中计算ymin和ymax, 再进行均匀分布
-	[MenuItem("MiscUtils/Spacing y axis")]
+	[MenuItem("Function/MiscUtils/Spacing Y axis")]
 	public static void SpacingYAxis()
 	{
 		var itor = MiscUtils.GetSelectedComponentsByOrder<Transform>();
@@ -731,9 +662,9 @@ public static class MiscUtils
 //	where T : UnityEngine.Object
 //{
 //	int count = results.Count;
-//	foreach (var obj in UnityEditor.Selection.objects)
+//	foreach (var result in UnityEditor.Selection.objects)
 //	{
-//		if (obj is T go)
+//		if (result is T go)
 //			results.Add(go);
 //	}
 //	return results.Count - count;

@@ -4,28 +4,11 @@ using UnityEngine;
 
 public static class MathUtils
 {
-	// 无视pivot计算当前RectTransform在父RectTransform中的位置
-	// 注意, 此值将会受到锚点的影响, 视锚点为计算的中心点
-	public static void CalculateMaxMin(this RectTransform tr, out Vector2 max, out Vector2 min) // , out Vector2 center
+	public static bool SameSign(float a, float b)
 	{
-		Debug.Assert(tr.anchorMax == tr.anchorMin, $"{tr.name}");
-
-		var halfSizeDelta = tr.sizeDelta * 0.5f;
-
-		//float x = Mathf.Lerp(-1, 1, tr.pivot.x) * halfSizeDelta.x;
-		//float y = Mathf.Lerp(-1, 1, tr.pivot.y) * halfSizeDelta.y;
-
-		// var pivotOffset = new Vector2(x, y);
-		var center = (Vector2)tr.localPosition; // tr.anchoredPosition - pivotOffset;
-		max = center + halfSizeDelta;
-		min = center - halfSizeDelta;
-	}
-
-	public static bool SameSign(float v1, float v2)
-	{
-		var t = v1 * v2;
+		var t = a * b;
 		// Approximately用于排除误差造成的极小值的情况
-		return t > 0 && !Mathf.Approximately(t, 0);
+		return Mathf.Approximately(a, b) || t > 0;
 	}
 
 	// 计算在一个循环范围中值的最小间隔
@@ -75,41 +58,9 @@ public static class MathUtils
 	// 顶点在(0.5f, 1.0f), 开口向下
 	public static float SinPeakWave(float x)
 		=> -4.0f * Mathf.Pow((x - 0.5f), 2) + 1.0f;
-	//public static float LinerPearWave(float x)
-	//	=> 
 
 	public static System.Func<float, float> Modulation(System.Func<float, float> basic, System.Func<float, float> ease)
 		=> (float x) => basic.Invoke(ease.Invoke(x));
-
-	// 比较vec2的值
-	// 只有2个值均op对方时才返回true
-	public static bool Gt(this Vector2 v1, Vector2 v2)
-		=> v1.x > v2.x && v1.y > v2.y;
-	public static bool Lt(this Vector2 v1, Vector2 v2)
-		=> v1.x < v2.x && v1.y < v2.y;
-
-	public static bool GtOrEq(this Vector2 v1, Vector2 v2)
-		=> v1.x >= v2.x && v1.y >= v2.y;
-	public static bool LtOrEq(this Vector2 v1, Vector2 v2)
-		=> v1.x <= v2.x && v1.y <= v2.y;
-
-	public static bool Gt(this Vector3 v1, Vector3 v2)
-		=> v1.x > v2.x && v1.y > v2.y && v1.z > v2.z;
-	public static bool Lt(this Vector3 v1, Vector3 v2)
-		=> v1.x < v2.x && v1.y < v2.y && v1.z < v2.z;
-
-	public static bool GtOrEq(this Vector3 v1, Vector3 v2)
-		=> v1.x >= v2.x && v1.y >= v2.y && v1.z >= v2.z;
-	public static bool LtOrEq(this Vector3 v1, Vector3 v2)
-		=> v1.x <= v2.x && v1.y <= v2.y && v1.z <= v2.z;
-
-	//public static void SetValue(this ref Vector3 vec, float? x = null, float? y = null, float? z = null)
-	//	=> vec.Set(x ?? vec.x, y ?? vec.y, z ?? vec.z);
-	//public static void SetValue(this ref Vector3 vec, Vector2 v, float? z = null)
-	//	=> vec.Set(v.x, v.y, z ?? vec.z);
-
-	//public static void SetValue(this ref Vector2 vec, float? x = null, float? y = null)
-	//	=> vec.Set(x ?? vec.x, y ?? vec.y);
 
 	public static Vector3 ToVec3(this Vector2 vec, float z)
 		=> new Vector3(vec.x, vec.y, z);
