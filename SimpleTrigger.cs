@@ -23,7 +23,7 @@ public class SimpleTrigger : MonoBehaviour
 			DestroyTriggerOnTrigger
 		}
 
-		public UnityEvent<GameObject> OnTrigger = new UnityEvent<GameObject>();
+		public UnityEvent<GameObject> OnTrigger; // = new UnityEvent<GameObject>();
 
 		public Mode mode;
 

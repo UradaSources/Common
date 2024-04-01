@@ -77,19 +77,21 @@ public static class MiscUtils
 			}
 			else if (createDefaultFromInput)
 			{
-				using var file = System.IO.File.Create(fullpath);
-				var configJson = JsonUtility.ToJson(obj);
+				using (var file = System.IO.File.Create(fullpath))
+				{
+					var configJson = JsonUtility.ToJson(obj);
 
-				// 将文本使用utf编码并写入
-				var bytes = System.Text.Encoding.UTF8.GetBytes(configJson);
-				file.Write(bytes, 0, bytes.Length);
-				file.Flush();
+					// 将文本使用utf编码并写入
+					var bytes = System.Text.Encoding.UTF8.GetBytes(configJson);
+					file.Write(bytes, 0, bytes.Length);
+					file.Flush();
 
-				file.Close();
+					file.Close();
 
-				Debug.Log($"Create default config file from input {typeof(T).Name}({fullpath})");
+					Debug.Log($"Create default config file from input {typeof(T).Name}({fullpath})");
 
-				return false;
+					return false;
+				}
 			}
 		}
 		catch (System.Exception exc)
@@ -131,20 +133,22 @@ public static class MiscUtils
 			}
 			else if (createDefault)
 			{
-				using var file = System.IO.File.Create(fullpath);
-				var configJson = JsonUtility.ToJson(defaultStruct);
+				using (var file = System.IO.File.Create(fullpath))
+				{
+					var configJson = JsonUtility.ToJson(defaultStruct);
 
-				// 将文本使用utf编码并写入
-				var bytes = System.Text.Encoding.UTF8.GetBytes(configJson);
-				file.Write(bytes, 0, bytes.Length);
-				file.Flush();
+					// 将文本使用utf编码并写入
+					var bytes = System.Text.Encoding.UTF8.GetBytes(configJson);
+					file.Write(bytes, 0, bytes.Length);
+					file.Flush();
 
-				file.Close();
+					file.Close();
 
-				Debug.Log($"Create default struct file from default struct {typeof(T).Name}({fullpath})");
+					Debug.Log($"Create default struct file from default struct {typeof(T).Name}({fullpath})");
 
-				result = defaultStruct;
-				return false;
+					result = defaultStruct;
+					return false;
+				}
 			}
 		}
 		catch (System.Exception exc)

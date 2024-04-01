@@ -5,7 +5,7 @@ using UnityEngine.Events;
 
 public class AutoRecycle : MonoBehaviour
 {
-	public UnityEvent<GameObject> OnReadyRecycle = new UnityEvent<GameObject>();
+	public UnityEvent<GameObject> OnReadyRecycle;// = new UnityEvent<GameObject>();
 
 	[SerializeField]
 	private bool m_forceDisable = true;
