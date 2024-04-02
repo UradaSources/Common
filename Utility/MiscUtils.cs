@@ -1,6 +1,8 @@
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -416,9 +418,16 @@ public static class MiscUtils
 	}
 
 #if UNITY_EDITOR
-	public static float GizmoScale(Vector3 position, Camera camera)
+	public static float EditorGizmoScale(Vector3 position)
 	{
 		position = Gizmos.matrix.MultiplyPoint(position);
+
+		Camera camera = null;
+		if (SceneView.lastActiveSceneView)
+			camera = SceneView.lastActiveSceneView.camera;
+		else if (SceneView.currentDrawingSceneView)
+			camera = SceneView.currentDrawingSceneView.camera;
+
 		if (camera)
 		{
 			Transform transform = camera.transform;
@@ -427,17 +436,13 @@ public static class MiscUtils
 			Vector3 a = camera.WorldToScreenPoint(position2 + transform.TransformDirection(new Vector3(0f, 0f, z)));
 			Vector3 b = camera.WorldToScreenPoint(position2 + transform.TransformDirection(new Vector3(1f, 0f, z)));
 			float magnitude = (a - b).magnitude;
-			return 80f / Mathf.Max(magnitude, 0.0001f);
+
+			float factor = 80f / Mathf.Max(magnitude, 0.0001f);
+			factor = Mathf.Clamp(factor, 0.2f, 2.0f); // 启动时该值显示80000, 正常应该在1上下
+			return factor;
 		}
 
-		return 20f;
-	}
-	public static float EditorGizmoScale(Vector3 position)
-	{
-		Camera camera = null;
-		if (SceneView.lastActiveSceneView)
-			camera = SceneView.lastActiveSceneView.camera;
-		return GizmoScale(position, camera);
+		return 0.7f;
 	}
 
 	/// <summary>

@@ -43,9 +43,9 @@ public class RangeGravity : MonoBehaviour
 		rb.AddForce(force * dir, ForceMode2D.Force);
 
 #if UNITY_EDITOR
-		DebugUtils.DrawMark(rb.position);
-		DebugUtils.DrawArrow(rb.position, force * dir);
-		DebugUtils.DrawArrow(rb.position, rb.velocity);
+		D.Mark(rb.position);
+		D.Arrow(rb.position, force * dir);
+		D.Arrow(rb.position, rb.velocity);
 #endif
 
 		return true;
@@ -73,7 +73,7 @@ public class RangeGravity : MonoBehaviour
 	}
 	private void OnDrawGizmosSelected()
 	{
-		DebugUtils.DrawCircle(this.GravityCenter, m_radius, 64);
+		D.Circle(this.GravityCenter, m_radius, 64);
 	}
 #endif
 }

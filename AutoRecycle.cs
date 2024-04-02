@@ -78,7 +78,7 @@ public class AutoRecycle : MonoBehaviour
 	private void OnDrawGizmosSelected()
 	{
 		if (m_useRectRange)
-			DebugUtils.DrawRange(m_rangeMin, m_rangeMax);
+			D.Range(m_rangeMin, m_rangeMax);
 	}
 #endif
 }
