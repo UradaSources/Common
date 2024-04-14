@@ -35,18 +35,30 @@ public readonly struct DrawArgs
 
 public static class D
 {
+	public static bool UseGizmosBackend;
+
 	[Conditional("UNITY_EDITOR")]
 	public static void Line(Vector3 a, Vector3 b, DrawArgs? args = null)
 	{
 		var param = args ?? DrawArgs.Default;
-		UnityEngine.Debug.DrawLine(a, b, param.color, param.duration, param.deepTest);
+
+		if (!UseGizmosBackend)
+			UnityEngine.Debug.DrawLine(a, b, param.color, param.duration, param.deepTest);
+		else
+		{
+			var oldColor = Gizmos.color;
+			
+			Gizmos.color = param.color;
+			Gizmos.DrawLine(a, b);
+
+			Gizmos.color = oldColor;
+		}
 	}
 
 	[Conditional("UNITY_EDITOR")]
 	public static void Ray(Vector3 pos, Vector3 dir, DrawArgs? args = null)
 	{
-		var param = args ?? DrawArgs.Default;
-		UnityEngine.Debug.DrawRay(pos, dir, param.color, param.duration, param.deepTest);
+		Line(pos, pos + dir, args);
 	}
 
 	[Conditional("UNITY_EDITOR")]
@@ -59,7 +71,6 @@ public static class D
 	[Conditional("UNITY_EDITOR")]
 	public static void Mark(Vector3 pos, DrawArgs? args = null)
 	{
-#if UNITY_EDITOR
 		var param = args ?? DrawArgs.Default;
 
 		// 根据当前编辑器视图缩放比例来计算尺寸
@@ -75,31 +86,33 @@ public static class D
 		D.Line(pos - zOffset, pos + zOffset, args);
 
 		D.Rect(pos, Vector2.one * size, 0, args);
-#endif
 	}
 
 	[Conditional("UNITY_EDITOR")]
 	public static void Arrow(Vector3 pos, Vector3 vec, DrawArgs? args = null)
 	{
-#if UNITY_EDITOR
-		const float ArrowHeadAngle = 15.0f;
+		const float HeadAngle = 15.0f;
+		const float HeadLen = 0.1f;
 
-		var param = args ?? DrawArgs.Default;
+		CustomArrow(pos, vec, HeadLen, HeadAngle, true, args);
+	}
 
+	[Conditional("UNITY_EDITOR")]
+	public static void CustomArrow(Vector3 pos, Vector3 vec, float arrowLen, float angle, bool scale, DrawArgs? args = null)
+	{
 		D.Ray(pos, vec, args);
 
 		var left = (vec * -1).normalized;
 		var right = (vec * -1).normalized;
 
-		left = Quaternion.AngleAxis(Vector2.Angle(vec, Vector2.zero) + ArrowHeadAngle, Vector3.forward) * left;
-		right = Quaternion.AngleAxis(Vector2.Angle(vec, Vector2.zero) - ArrowHeadAngle, Vector3.forward) * right;
+		left = Quaternion.AngleAxis(Vector2.Angle(vec, Vector2.zero) + angle, Vector3.forward) * left;
+		right = Quaternion.AngleAxis(Vector2.Angle(vec, Vector2.zero) - angle, Vector3.forward) * right;
 
-		var scale = MiscUtils.EditorGizmoScale(pos);
-		var size = param.size * scale;
+		var size = arrowLen;
+		if (scale) size *= MiscUtils.EditorGizmoScale(pos);
 
-		D.Ray(pos + vec, left * param.size, args);
-		D.Ray(pos + vec, right * param.size, args);
-#endif
+		D.Ray(pos + vec, left * size, args);
+		D.Ray(pos + vec, right * size, args);
 	}
 
 	[Conditional("UNITY_EDITOR")]
