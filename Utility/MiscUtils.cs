@@ -417,9 +417,9 @@ public static class MiscUtils
 		}
 	}
 
-#if UNITY_EDITOR
 	public static float EditorGizmoScale(Vector3 position)
 	{
+#if UNITY_EDITOR
 		position = Gizmos.matrix.MultiplyPoint(position);
 
 		Camera camera = null;
@@ -441,9 +441,11 @@ public static class MiscUtils
 			factor = Mathf.Clamp(factor, 0.2f, 2.0f); // 启动时该值显示80000, 正常应该在1上下
 			return factor;
 		}
-
+#endif
 		return 0.7f;
 	}
+
+#if UNITY_EDITOR
 
 	/// <summary>
 	/// 按顺序获取被选中的GameObject
