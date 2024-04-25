@@ -197,6 +197,21 @@ public static class MathUtils
 		return Mathf.Approximately(v, 0) ? 0 : v > 0 ? 1 : -1;
 	}
 
+	// 点到直线的距离
+	public static float DistancePointToLine(Vector2 point, Vector2 linePointA, Vector2 linePointB)
+	{
+		float lineLengthSquared = Vector2.Distance(linePointA, linePointB);
+		if (lineLengthSquared == 0f)
+		{
+			// 线段长度为零，点与线段的距离为点到线段端点的距离
+			return Vector2.Distance(point, linePointA);
+		}
+
+		float t = Mathf.Clamp01(Vector2.Dot(point - linePointA, linePointB - linePointA) / lineLengthSquared);
+		Vector2 projection = linePointA + t * (linePointB - linePointA);
+		return Vector2.Distance(point, projection);
+	}
+
 	// 圆的参数方程
 	public static Vector2 Circle(float radius, float angleRad)
 	{

@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices.WindowsRuntime;
 using UnityEngine;
 
 namespace BasicStruct
@@ -181,6 +182,45 @@ namespace BasicStruct
 			this.a = a;
 			this.b = b;
 			this.c = c;
+		}
+	}
+
+	public struct Triangle
+	{
+		private Vector2 _a, _b, _c;
+		public Vector2 a => _a;
+		public Vector2 b => _b;
+		public Vector2 c => _c;
+
+		private float _denominator;
+		public float denominator => _denominator;
+
+		public float lineA2B => Vector2.Distance(a, b);
+		public float lineB2C => Vector2.Distance(b, c);
+		public float lineC2A => Vector2.Distance(c, a);
+
+		public bool Contains(Vector2 point)
+		{
+			float u = ((b.y - c.y) * (point.x - c.x) + (c.x - b.x) * (point.y - c.y)) / denominator;
+			float v = ((c.y - a.y) * (point.x - c.x) + (a.x - c.x) * (point.y - c.y)) / denominator;
+			float w = 1f - u - v;
+
+			return (u >= 0f && v >= 0f && w >= 0f);
+		}
+		public Vector2 MapPointCOrig(Vector2 point)
+		{
+			var x = MathUtils.DistancePointToLine(point, this.c, this.a);
+			var y = MathUtils.DistancePointToLine(point, this.c, this.b);
+			return new Vector2(x, y);
+		}
+
+		public Triangle(Vector2 a, Vector2 b, Vector2 c)
+		{
+			_a = a;
+			_b = b;
+			_c = c;
+			
+			_denominator = ((b.y - c.y) * (a.x - c.x) + (c.x - b.x) * (a.y - c.y));
 		}
 	}
 }
