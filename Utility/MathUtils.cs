@@ -77,10 +77,18 @@ public static class MathUtils
 	{
 		return v >= Mathf.Min(r1, r2) && v <= Mathf.Max(r1, r2);
 	}
-	public static bool InRange(Vector2 v, Vector2 r1, Vector2 r2)
+	public static bool InRange(Vector2 v, Vector2 max, Vector2 min, bool contain = true)
 	{
-		return InRange(v.x, Mathf.Max(r1.x, r2.x), Mathf.Min(r1.x, r2.x))
-			&& InRange(v.y, Mathf.Max(r1.y, r2.y), Mathf.Min(r1.y, r2.y));
+		if (contain)
+		{
+			return v.x <= max.x && v.x >= min.x
+				&& v.y <= max.y && v.y >= min.y;
+		}
+		else
+		{
+			return v.x < max.x && v.x > min.x
+				&& v.y < max.y && v.y > min.y;
+		}
 	}
 
 	// 在abs(v - unit*n) <= tolerance时返回unit*n, 其他情况下返回v
