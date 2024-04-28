@@ -54,6 +54,28 @@ public static class MathUtils
 		return (tmax, tmin);
 	}
 
+	public static Vector2 SpacePointMap(Vector2 source, Vector2 target, Vector2 point, bool clamp = true)
+	{
+		var nor = point / source;
+		if (clamp)
+		{
+			nor.x = Mathf.Clamp01(nor.x);
+			nor.y = Mathf.Clamp01(nor.y);
+		}
+		return nor * target;
+	}
+	public static Vector2 SpacePointMap(Rect source, Rect target, Vector2 point, bool clamp = true)
+	{
+		point -= source.position;
+		var nor = point / source.size;
+		if (clamp)
+		{
+			nor.x = Mathf.Clamp01(nor.x);
+			nor.y = Mathf.Clamp01(nor.y);
+		}
+		return (nor * target.size) + target.position;
+	}
+
 	// 波峰函数
 	// 顶点在(0.5f, 1.0f), 开口向下
 	public static float SinPeakWave(float x)
