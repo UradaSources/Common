@@ -64,7 +64,10 @@ public static class MathUtils
 		}
 		return nor * target;
 	}
-	public static Vector2 SpacePointMap(Rect source, Rect target, Vector2 point, bool clamp = true)
+
+	// 将位于同一空间的source矩形内的点映射到target矩形内
+	// 应当保持点在矩形内的相对位置不变
+	public static Vector2 SpacePointMap(Rect source, Rect target, Vector2 point, bool clamp = true, bool retGolbalPoint = true, bool yReverse = false, bool xReverse = false)
 	{
 		point -= source.position;
 		var nor = point / source.size;
@@ -73,7 +76,16 @@ public static class MathUtils
 			nor.x = Mathf.Clamp01(nor.x);
 			nor.y = Mathf.Clamp01(nor.y);
 		}
-		return (nor * target.size) + target.position;
+
+		if (xReverse) nor.x = 1 - nor.x;
+		if (yReverse) nor.y = 1 - nor.y;
+
+		point = (nor * target.size);
+
+		if(retGolbalPoint) 
+			point += target.position;
+
+		return point;
 	}
 
 	// 波峰函数
@@ -95,9 +107,14 @@ public static class MathUtils
 	}
 
 	// 检查是否在范围中
-	public static bool InRange(float v, float r1, float r2)
+	public static bool InRange(float v, Vector2 range)
+	{ 
+		return InRange(v, range.x, range.y);
+	}
+	public static bool InRange(float v, float max, float min)
 	{
-		return v >= Mathf.Min(r1, r2) && v <= Mathf.Max(r1, r2);
+		Debug.Assert(max > min);
+		return v >= min && v <= max;
 	}
 	public static bool InRange(Vector2 v, Vector2 max, Vector2 min, bool contain = true)
 	{
@@ -111,6 +128,18 @@ public static class MathUtils
 			return v.x < max.x && v.x > min.x
 				&& v.y < max.y && v.y > min.y;
 		}
+	}
+
+	public static bool PointInTriangle(Vector2 p, Vector2 p0, Vector2 p1, Vector2 p2)
+	{
+		var s = (p0.x - p2.x) * (p.y - p2.y) - (p0.y - p2.y) * (p.x - p2.x);
+		var t = (p1.x - p0.x) * (p.y - p0.y) - (p1.y - p0.y) * (p.x - p0.x);
+
+		if ((s < 0) != (t < 0) && s != 0 && t != 0)
+			return false;
+
+		var d = (p2.x - p1.x) * (p.y - p1.y) - (p2.y - p1.y) * (p.x - p1.x);
+		return d == 0 || (d < 0) == (s + t <= 0);
 	}
 
 	// 在abs(v - unit*n) <= tolerance时返回unit*n, 其他情况下返回v
