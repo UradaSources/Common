@@ -3,12 +3,13 @@ using System.Collections;
 using System.Diagnostics;
 using UnityEngine;
 using Urd.Common;
+using Codice.CM.WorkspaceServer.DataStore.Configuration;
 
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 
-public readonly struct DrawArgs
+public struct DrawArgs
 {
 	public static implicit operator DrawArgs(Color c)
 		=> new DrawArgs(color: c);
@@ -20,10 +21,10 @@ public readonly struct DrawArgs
 		deepTest: false
 	);
 
-	public readonly float size;
-	public readonly Color color;
-	public readonly float duration;
-	public readonly bool deepTest;
+	public float size;
+	public Color color;
+	public float duration;
+	public bool deepTest;
 
 	public DrawArgs(float size = 0.1f, Color? color = null, float duration = 0, bool deepTest = false)
 	{
@@ -149,6 +150,40 @@ public static class D
 
 		if (isClosed)
 			D.Line(previous, first, args);
+	}
+
+	public static void MarkPoints(IEnumerable<Vector3> points, bool isClosed = false, DrawArgs? args = null)
+	{
+		bool recordFirst = false;
+		Vector3 first = default;
+
+		Vector3 previous = default;
+
+		foreach (var cur in points)
+		{
+			if (!recordFirst)
+			{
+				var ag = args ?? new DrawArgs();
+				ag.color = Color.red;
+
+				D.Mark(cur, ag);
+			}
+			else
+				D.Mark(cur, args);
+
+			if (!recordFirst)
+			{
+				first = cur;
+				recordFirst = true;
+			}
+			else
+				D.ArrowBetween(previous, cur, args);
+
+			previous = cur;
+		}
+
+		if (isClosed)
+			D.ArrowBetween(previous, first, args);
 	}
 
 	[Conditional("UNITY_EDITOR")]
