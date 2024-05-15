@@ -132,6 +132,47 @@ namespace Urd.Common
 			return new Result(false, "unknow", -2);
 		}
 
+		public static Result SaveConfig<T>(string basename, T obj, string folderPath = null)
+		{
+			const string DefaultFolderPath = "/config/";
+
+			folderPath = folderPath ?? (Application.streamingAssetsPath + DefaultFolderPath);
+			var fullpath = System.IO.Path.Combine(folderPath, basename + ".cfg");
+
+			try
+			{
+				string directoryPath = System.IO.Path.GetDirectoryName(fullpath);
+				if (!System.IO.Directory.Exists(directoryPath))
+				{
+					System.IO.Directory.CreateDirectory(directoryPath);
+					Debug.Log("Created config directory: " + directoryPath);
+				}
+
+				if (!System.IO.File.Exists(fullpath))
+				{
+					System.IO.File.Create(fullpath);
+					Debug.Log($"Config file does not exist, will create : {fullpath}");
+				}
+
+				var configJson = JsonUtility.ToJson(obj);
+
+				// 将文本使用utf编码并写入
+				var bytes = System.Text.Encoding.UTF8.GetBytes(configJson);
+
+				System.IO.File.WriteAllBytes(fullpath, bytes);
+				Debug.Log($"Config written to file successfully: {fullpath}");
+
+				return new Result(true, "");
+			}
+			catch (System.Exception exc)
+			{
+				var info = $"Save {obj.GetType().Name} config faild: {exc}, from {fullpath}";
+
+				Debug.LogError(info);
+				return new Result(false, info, -1);
+			}
+		}
+
 		/// <summary>
 		/// 围绕pivot旋转angle度
 		/// angle为目标的localEulerAngles.z
