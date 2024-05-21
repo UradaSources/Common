@@ -1,9 +1,7 @@
 {
-    "name": "Assembly-Common",
+    "name": "Urd-Common",
     "rootNamespace": "",
-    "references": [
-        "GUID:888ba06868b62bb45b21a41f77c036c7"
-    ],
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": true,
